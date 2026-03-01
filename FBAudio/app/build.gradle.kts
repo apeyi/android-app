@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -13,16 +16,19 @@ android {
         applicationId = "com.fba.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file("../fbaudio-release.keystore")
-            storePassword = "fbaudio123"
-            keyAlias = "fbaudio"
-            keyPassword = "fbaudio123"
+            val localProps = rootProject.file("local.properties")
+            val props = Properties()
+            if (localProps.exists()) props.load(FileInputStream(localProps))
+            storeFile = file(props.getProperty("RELEASE_STORE_FILE", "../fbaudio-release.keystore"))
+            storePassword = props.getProperty("RELEASE_STORE_PASSWORD", "")
+            keyAlias = props.getProperty("RELEASE_KEY_ALIAS", "fbaudio")
+            keyPassword = props.getProperty("RELEASE_KEY_PASSWORD", "")
         }
     }
 

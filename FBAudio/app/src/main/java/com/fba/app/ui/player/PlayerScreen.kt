@@ -326,9 +326,12 @@ fun PlayerScreen(
                 Text("0.5x", style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = speedSliderPos,
-                    onValueChange = { speedSliderPos = it },
-                    onValueChangeFinished = {
-                        playerViewModel.setPlaybackSpeed(displaySpeed)
+                    onValueChange = {
+                        speedSliderPos = it
+                        // Apply speed live while sliding
+                        val speed = 0.5f + it * 1.5f
+                        val snapped = (Math.round(speed * 20.0) / 20.0).toFloat()
+                        playerViewModel.setPlaybackSpeed(snapped)
                     },
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                 )

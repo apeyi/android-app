@@ -54,10 +54,16 @@ class PlayerViewModel @Inject constructor(
 
     private var mediaController: MediaController? = null
     private var downloadObservationJob: Job? = null
+    private var lastSaveTime: Long = 0
+    private var pendingRestore: RestoreState? = null
+
+    private data class RestoreState(val catNum: String, val position: Long, val trackIndex: Int)
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
+            // Save state when pausing (might be last chance before process death)
+            if (!isPlaying) savePlaybackState()
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -67,6 +73,104 @@ class PlayerViewModel @Inject constructor(
 
     init {
         connectToService()
+        restoreLastPlayback()
+    }
+
+    /** Restore the last played talk so the mini player shows on app restart. */
+    private fun restoreLastPlayback() {
+        val lastCatNum = prefs.getString("last_cat_num", null) ?: return
+        val lastPos = prefs.getLong("last_position_$lastCatNum", 0)
+        val lastTrackIndex = prefs.getInt("last_track_index_$lastCatNum", 0)
+        val lastDuration = prefs.getLong("last_duration_$lastCatNum", 0)
+        pendingRestore = RestoreState(lastCatNum, lastPos, lastTrackIndex)
+        viewModelScope.launch {
+            val talk = talkRepository.getTalkDetail(lastCatNum) ?: return@launch
+            val trackDuration = talk.tracks.getOrNull(lastTrackIndex)?.durationSeconds?.let { it * 1000L }
+                ?: lastDuration.takeIf { it > 0 }
+                ?: (talk.durationSeconds * 1000L)
+            _uiState.value = _uiState.value.copy(
+                currentTalk = talk,
+                isVisible = true,
+                currentPosition = lastPos.coerceAtMost(trackDuration),
+                duration = trackDuration,
+                currentTrackIndex = lastTrackIndex,
+                isPlaying = false,
+            )
+        }
+    }
+
+    /** Load media into the controller for a restored session (paused, seeked to position). */
+    private fun applyPendingRestore() {
+        val restore = pendingRestore ?: return
+        pendingRestore = null
+        val controller = mediaController ?: return
+
+        viewModelScope.launch {
+            // Fetch talk (may already be cached in Room)
+            val talk = talkRepository.getTalkDetail(restore.catNum) ?: return@launch
+            val trackIndex = restore.trackIndex
+            val track = talk.tracks.getOrNull(trackIndex)
+            val audioUrl = track?.audioUrl ?: talk.audioUrl
+
+            // Check for downloaded file
+            val trackFile = java.io.File(com.fba.app.download.DownloadWorker.trackFilePath(context, restore.catNum, trackIndex))
+            val download = downloadRepository.getDownload(restore.catNum)
+            val uri = when {
+                trackFile.exists() -> Uri.parse("file://${trackFile.absolutePath}")
+                trackIndex == 0 && download?.status == DownloadStatus.COMPLETE && download.filePath.isNotBlank() ->
+                    Uri.parse("file://${download.filePath}")
+                else -> Uri.parse(audioUrl)
+            }
+
+            val mediaItem = MediaItem.Builder()
+                .setUri(uri)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(track?.title?.ifBlank { talk.title } ?: talk.title)
+                        .setArtist(talk.speaker)
+                        .setArtworkUri(if (talk.imageUrl.isNotBlank()) Uri.parse(talk.imageUrl) else null)
+                        .build()
+                )
+                .build()
+
+            controller.setMediaItem(mediaItem)
+            controller.prepare()
+
+            // Seek after player is ready
+            val seekPos = (restore.position - 10_000).coerceAtLeast(0)
+            controller.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        controller.seekTo(seekPos)
+                        controller.pause()
+                        controller.removeListener(this)
+                    }
+                }
+            })
+
+            _uiState.value = _uiState.value.copy(
+                currentTalk = talk,
+                isVisible = true,
+                currentTrackIndex = trackIndex,
+                downloadStatus = download?.status,
+            )
+        }
+    }
+
+    /** Save current playback state immediately (uses commit for reliability). */
+    private fun savePlaybackState() {
+        val state = _uiState.value
+        val catNum = state.currentTalk?.catNum ?: return
+        val controller = mediaController
+        val pos = controller?.currentPosition?.coerceAtLeast(0) ?: state.currentPosition
+        val dur = controller?.duration?.coerceAtLeast(0) ?: state.duration
+        if (pos <= 0 && dur <= 0) return // don't overwrite good data with zeros
+        prefs.edit()
+            .putString("last_cat_num", catNum)
+            .putLong("last_position_$catNum", pos)
+            .putInt("last_track_index_$catNum", state.currentTrackIndex)
+            .putLong("last_duration_$catNum", dur)
+            .commit() // sync write — survives process death
     }
 
     private fun connectToService() {
@@ -77,6 +181,7 @@ class PlayerViewModel @Inject constructor(
             mediaController?.addListener(playerListener)
             mediaController?.setPlaybackSpeed(savedSpeed)
             startPositionUpdates()
+            applyPendingRestore()
         }, MoreExecutors.directExecutor())
     }
 
@@ -91,11 +196,22 @@ class PlayerViewModel @Inject constructor(
 
     private fun updatePosition() {
         val controller = mediaController ?: return
+        // Don't overwrite restored state if nothing is loaded in the player
+        if (controller.mediaItemCount == 0) return
+        val pos = controller.currentPosition.coerceAtLeast(0)
         _uiState.value = _uiState.value.copy(
-            currentPosition = controller.currentPosition.coerceAtLeast(0),
+            currentPosition = pos,
             duration = controller.duration.coerceAtLeast(0),
             isPlaying = controller.isPlaying,
         )
+        // Save position every 5 seconds for resume
+        if (controller.isPlaying) {
+            val now = System.currentTimeMillis()
+            if (now - lastSaveTime > 5000) {
+                lastSaveTime = now
+                savePlaybackState()
+            }
+        }
     }
 
     fun playTalk(catNum: String) {
@@ -119,6 +235,13 @@ class PlayerViewModel @Inject constructor(
             val imageUrl = talk?.imageUrl ?: download?.imageUrl ?: ""
 
             setMediaAndPlay(audioUri, title, speaker, imageUrl)
+
+            // Resume from saved position (10s earlier for context)
+            val savedTrackIndex = prefs.getInt("last_track_index_$catNum", 0)
+            val savedPos = prefs.getLong("last_position_$catNum", 0)
+            if (savedPos > 10_000 && savedTrackIndex == 0) {
+                mediaController?.seekTo((savedPos - 10_000).coerceAtLeast(0))
+            }
 
             // Build a Talk for the UI even if network fetch failed (offline)
             val displayTalk = talk ?: Talk(
@@ -246,11 +369,18 @@ class PlayerViewModel @Inject constructor(
                 currentTalk.speaker,
                 currentTalk.imageUrl,
             )
+            // Resume saved position for this track
+            val savedTrackIndex = prefs.getInt("last_track_index_${currentTalk.catNum}", -1)
+            val savedPos = prefs.getLong("last_position_${currentTalk.catNum}", 0)
+            if (savedTrackIndex == index && savedPos > 10_000) {
+                mediaController?.seekTo((savedPos - 10_000).coerceAtLeast(0))
+            }
             _uiState.value = _uiState.value.copy(currentTrackIndex = index)
         }
     }
 
     override fun onCleared() {
+        savePlaybackState()
         mediaController?.removeListener(playerListener)
         mediaController?.release()
         super.onCleared()

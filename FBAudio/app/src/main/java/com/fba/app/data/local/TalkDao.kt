@@ -25,4 +25,9 @@ interface TalkDao {
 
     @Query("DELETE FROM talks WHERE cachedAt < :before")
     suspend fun deleteOlderThan(before: Long)
+
+    @Query("SELECT catNum, imageUrl FROM talks WHERE catNum IN (:catNums)")
+    suspend fun getImageUrls(catNums: List<String>): List<CatNumImage>
 }
+
+data class CatNumImage(val catNum: String, val imageUrl: String)

@@ -55,7 +55,9 @@ fun BrowseScreen(
                         text = if (state.selectedCategory != null && state.totalTalkCount > 0)
                             "${state.selectedCategory!!.name} (${state.totalTalkCount})"
                         else
-                            state.selectedCategory?.name ?: "Browse"
+                            state.selectedCategory?.name ?: "Browse",
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {

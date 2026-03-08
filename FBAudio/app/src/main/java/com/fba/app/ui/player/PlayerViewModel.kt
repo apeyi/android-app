@@ -57,6 +57,7 @@ class PlayerViewModel @Inject constructor(
 
     private var mediaController: MediaController? = null
     private var downloadObservationJob: Job? = null
+    private var positionUpdateJob: Job? = null
     private var lastSaveTime: Long = 0
     private var pendingRestore: RestoreState? = null
 
@@ -65,8 +66,13 @@ class PlayerViewModel @Inject constructor(
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
-            // Save state when pausing (might be last chance before process death)
-            if (!isPlaying) savePlaybackState()
+            if (isPlaying) {
+                startPositionUpdates()
+            } else {
+                stopPositionUpdates()
+                updatePosition() // one final update
+                savePlaybackState()
+            }
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -205,6 +211,7 @@ class PlayerViewModel @Inject constructor(
                     totalDurationSeconds = totalDur,
                 )
             )
+            recentlyListenedDao.pruneOld()
         }
     }
 
@@ -215,18 +222,25 @@ class PlayerViewModel @Inject constructor(
             mediaController = controllerFuture.get()
             mediaController?.addListener(playerListener)
             mediaController?.setPlaybackSpeed(savedSpeed)
-            startPositionUpdates()
+            // Start polling only if already playing (e.g. after config change)
+            if (mediaController?.isPlaying == true) startPositionUpdates()
             applyPendingRestore()
         }, MoreExecutors.directExecutor())
     }
 
     private fun startPositionUpdates() {
-        viewModelScope.launch {
+        if (positionUpdateJob?.isActive == true) return
+        positionUpdateJob = viewModelScope.launch {
             while (isActive) {
                 updatePosition()
                 delay(500)
             }
         }
+    }
+
+    private fun stopPositionUpdates() {
+        positionUpdateJob?.cancel()
+        positionUpdateJob = null
     }
 
     private fun updatePosition() {

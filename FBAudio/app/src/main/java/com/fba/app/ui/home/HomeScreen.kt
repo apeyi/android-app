@@ -1,7 +1,6 @@
 package com.fba.app.ui.home
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MenuBook
@@ -34,11 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.fba.app.R
 import com.fba.app.ui.components.TalkCard
 import com.fba.app.ui.components.formatDuration
 
@@ -66,7 +67,6 @@ fun HomeScreen(
             // --- Sangharakshita section ---
             item {
                 SangharakshitaSection(
-                    imageUrl = state.sangharakshitaImageUrl,
                     talkCount = state.sangharakshitaTalkCount,
                     seriesCount = state.sangharakshitaSeriesCount,
                     onByYearClick = onSangharakshitaByYearClick,
@@ -106,7 +106,10 @@ fun HomeScreen(
                     val progress = if (totalMs > 0)
                         (entry.positionMs.toFloat() / totalMs).coerceIn(0f, 1f)
                     else 0f
-                    val subtitle = if (entry.totalDurationSeconds > 0) {
+                    val isCompleted = progress > 0.95f
+                    val subtitle = if (isCompleted) {
+                        "Completed · ${formatDuration(entry.totalDurationSeconds)}"
+                    } else if (entry.totalDurationSeconds > 0) {
                         val posText = formatDuration((entry.positionMs / 1000).toInt())
                         val totalText = formatDuration(entry.totalDurationSeconds)
                         "$posText / $totalText"
@@ -120,18 +123,31 @@ fun HomeScreen(
                             imageUrl = entry.imageUrl,
                             subtitle = subtitle,
                             onClick = { onTalkClick(entry.catNum) },
-                            trailing = if (isDownloaded) {
+                            trailing = if (isCompleted || isDownloaded) {
                                 {
-                                    Icon(
-                                        Icons.Default.DownloadDone,
-                                        contentDescription = "Downloaded",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(18.dp),
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (isCompleted) {
+                                            Icon(
+                                                Icons.Default.CheckCircle,
+                                                contentDescription = "Completed",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        }
+                                        if (isDownloaded) {
+                                            if (isCompleted) Spacer(Modifier.width(4.dp))
+                                            Icon(
+                                                Icons.Default.DownloadDone,
+                                                contentDescription = "Downloaded",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        }
+                                    }
                                 }
                             } else null,
                         )
-                        if (progress > 0f) {
+                        if (progress > 0f && !isCompleted) {
                             LinearProgressIndicator(
                                 progress = progress,
                                 modifier = Modifier
@@ -150,7 +166,6 @@ fun HomeScreen(
 
 @Composable
 private fun SangharakshitaSection(
-    imageUrl: String,
     talkCount: Int,
     seriesCount: Int,
     onByYearClick: () -> Unit,
@@ -165,8 +180,8 @@ private fun SangharakshitaSection(
     ) {
         Column {
             // Hero image
-            AsyncImage(
-                model = imageUrl,
+            Image(
+                painter = painterResource(R.drawable.sangharakshita),
                 contentDescription = "Sangharakshita",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -224,8 +239,8 @@ private fun DonateCard(onDonateClick: () -> Unit) {
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = "https://www.freebuddhistaudio.com/images/logo/fba-half-size.jpg",
+            Image(
+                painter = painterResource(R.drawable.fba_logo),
                 contentDescription = "FBA logo",
                 modifier = Modifier
                     .height(28.dp)

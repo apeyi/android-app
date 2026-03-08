@@ -13,4 +13,7 @@ interface RecentlyListenedDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: RecentlyListenedEntity)
+
+    @Query("DELETE FROM recently_listened WHERE catNum NOT IN (SELECT catNum FROM recently_listened ORDER BY listenedAt DESC LIMIT 30)")
+    suspend fun pruneOld()
 }

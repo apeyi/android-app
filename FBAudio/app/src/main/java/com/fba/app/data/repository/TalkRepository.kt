@@ -10,14 +10,23 @@ import com.fba.app.domain.model.SearchResult
 import com.fba.app.domain.model.Talk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class TalkRepository @Inject constructor(
     private val scraper: FBAScraper,
     private val talkDao: TalkDao,
 ) {
-    // In-memory cache for browse results (keyed by browseUrl)
-    private val browseCache = mutableMapOf<String, List<SearchResult>>()
+    // In-memory cache for browse results (keyed by browseUrl), capped size
+    private val browseCache = LinkedHashMap<String, List<SearchResult>>(16, 0.75f, true)
+
+    init {
+        // Prune talks cached more than 30 days ago on startup
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000
+            talkDao.deleteOlderThan(thirtyDaysAgo)
+        }
+    }
     fun observeCachedTalks(): Flow<List<Talk>> {
         return talkDao.getAllTalks().map { entities -> entities.map { it.toDomain() } }
     }
@@ -68,7 +77,13 @@ class TalkRepository @Inject constructor(
     }
 
     fun getCachedBrowse(key: String): List<SearchResult>? = browseCache[key]
-    fun setCachedBrowse(key: String, items: List<SearchResult>) { browseCache[key] = items }
+    fun setCachedBrowse(key: String, items: List<SearchResult>) {
+        if (browseCache.size >= 50) {
+            val oldest = browseCache.keys.first()
+            browseCache.remove(oldest)
+        }
+        browseCache[key] = items
+    }
 
     suspend fun fetchTranscript(transcriptUrl: String): String {
         return scraper.fetchTranscript(transcriptUrl)

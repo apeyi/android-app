@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.fba.app.data.local.DownloadDao
 import com.fba.app.data.local.DownloadStatus
+import com.fba.app.data.remote.TranscriptParser
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import okhttp3.OkHttpClient
@@ -56,16 +57,22 @@ class DownloadWorker @AssistedInject constructor(
             var totalDownloaded: Long = 0
 
             for ((index, url) in urls.withIndex()) {
+                // Check if worker has been stopped (e.g. cancelled or constraints no longer met)
+                if (isStopped) {
+                    downloadDao.updateStatus(catNum, DownloadStatus.FAILED)
+                    return Result.failure()
+                }
+
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
 
                 if (!response.isSuccessful) {
-                    downloadDao.updateProgress(catNum, DownloadStatus.FAILED, 0)
+                    downloadDao.updateStatus(catNum, DownloadStatus.FAILED)
                     return Result.failure()
                 }
 
                 val body = response.body ?: run {
-                    downloadDao.updateProgress(catNum, DownloadStatus.FAILED, 0)
+                    downloadDao.updateStatus(catNum, DownloadStatus.FAILED)
                     return Result.failure()
                 }
 
@@ -75,6 +82,10 @@ class DownloadWorker @AssistedInject constructor(
                     FileOutputStream(file).use { outputStream ->
                         val buffer = ByteArray(8192)
                         while (true) {
+                            if (isStopped) {
+                                downloadDao.updateStatus(catNum, DownloadStatus.FAILED)
+                                return Result.failure()
+                            }
                             val read = inputStream.read(buffer)
                             if (read == -1) break
                             outputStream.write(buffer, 0, read)
@@ -90,46 +101,14 @@ class DownloadWorker @AssistedInject constructor(
 
             // Download transcript if available (best-effort, don't fail the download)
             val transcriptUrl = inputData.getString(KEY_TRANSCRIPT_URL)
-            if (!transcriptUrl.isNullOrBlank()) {
+            if (!transcriptUrl.isNullOrBlank() && !isStopped) {
                 try {
                     val transcriptRequest = Request.Builder().url(transcriptUrl).build()
                     val transcriptResponse = client.newCall(transcriptRequest).execute()
                     if (transcriptResponse.isSuccessful) {
                         val html = transcriptResponse.body?.string() ?: ""
                         if (html.isNotBlank()) {
-                            // Parse transcript HTML to plain text
-                            val doc = org.jsoup.Jsoup.parse(html)
-                            // Try document.__FBA__.text.content first
-                            var text = ""
-                            for (script in doc.select("script")) {
-                                val data = script.data()
-                                val marker = "document.__FBA__.text"
-                                val idx = data.indexOf(marker)
-                                if (idx >= 0) {
-                                    val braceIdx = data.indexOf('{', idx)
-                                    if (braceIdx >= 0) {
-                                        val jsonStr = extractBalancedBraces(data, braceIdx)
-                                        if (jsonStr != null) {
-                                            val json = com.google.gson.JsonParser.parseString(jsonStr).asJsonObject
-                                            val content = json.get("content")?.asString ?: ""
-                                            if (content.isNotBlank()) {
-                                                val contentDoc = org.jsoup.Jsoup.parse(content)
-                                                val sb = StringBuilder()
-                                                for (el in contentDoc.select("p, br, h1, h2, h3, h4, h5, h6, blockquote, li")) {
-                                                    val t = el.text().trim()
-                                                    if (t.isNotBlank()) sb.append(t).append("\n\n")
-                                                }
-                                                text = sb.toString().trim().ifBlank { contentDoc.wholeText().trim() }
-                                            }
-                                        }
-                                    }
-                                    break
-                                }
-                            }
-                            if (text.isBlank()) {
-                                text = doc.select(".text-content, .content, article, main").text()
-                                    .ifBlank { doc.body()?.text() ?: "" }
-                            }
+                            val text = TranscriptParser.parseTranscriptHtml(html)
                             if (text.isNotBlank()) {
                                 val transcriptFile = File(downloadsDir, "${catNum}_transcript.txt")
                                 transcriptFile.writeText(text)
@@ -151,25 +130,9 @@ class DownloadWorker @AssistedInject constructor(
 
             return Result.success()
         } catch (e: Exception) {
-            downloadDao.updateProgress(catNum, DownloadStatus.FAILED, 0)
+            // Preserve current progress — only update status to FAILED
+            downloadDao.updateStatus(catNum, DownloadStatus.FAILED)
             return Result.failure()
         }
-    }
-
-    private fun extractBalancedBraces(data: String, start: Int): String? {
-        var depth = 0
-        var inString = false
-        var escape = false
-        for (i in start until data.length) {
-            val c = data[i]
-            if (escape) { escape = false; continue }
-            if (c == '\\' && inString) { escape = true; continue }
-            if (c == '"') { inString = !inString; continue }
-            if (!inString) {
-                if (c == '{') depth++
-                else if (c == '}') { depth--; if (depth == 0) return data.substring(start, i + 1) }
-            }
-        }
-        return null
     }
 }

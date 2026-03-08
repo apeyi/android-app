@@ -17,7 +17,6 @@ import javax.inject.Inject
 data class HomeUiState(
     val recentlyListened: List<RecentlyListenedEntity> = emptyList(),
     val downloadedCatNums: Set<String> = emptySet(),
-    val sangharakshitaImageUrl: String = "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg",
     val sangharakshitaTalkCount: Int = SangharakshitaData.allTalksAsSearchResults().size,
     val sangharakshitaSeriesCount: Int = SangharakshitaData.series.size,
 )

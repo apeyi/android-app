@@ -423,31 +423,7 @@ class FBAScraper @Inject constructor(
     suspend fun fetchTranscript(transcriptUrl: String): String {
         val url = resolveUrl(transcriptUrl)
         val html = fetchHtml(url)
-        // transcript content is in document.__FBA__.text.content (HTML string)
-        val textJson = extractFbaJson(html, "text")
-        if (textJson != null) {
-            val content = textJson.getStr("content") ?: ""
-            if (content.isNotBlank()) {
-                val doc = Jsoup.parse(content)
-                // Set Jsoup output to preserve whitespace
-                doc.outputSettings().prettyPrint(false)
-                val sb = StringBuilder()
-                for (el in doc.select("p, br, h1, h2, h3, h4, h5, h6, blockquote, li")) {
-                    val text = el.text().trim()
-                    if (text.isNotBlank()) {
-                        sb.append(text).append("\n\n")
-                    }
-                }
-                if (sb.isNotBlank()) return sb.toString().trim()
-                // Fallback if no p tags: split on br
-                return doc.wholeText().trim()
-            }
-        }
-        // Fallback: just extract body text from the HTML page
-        val doc = Jsoup.parse(html)
-        return doc.select(".text-content, .content, article, main").text().ifBlank {
-            doc.body()?.text() ?: ""
-        }
+        return TranscriptParser.parseTranscriptHtml(html)
     }
 
     /** Fetch a page of audio talks from any browse or series URL with full pagination metadata. */

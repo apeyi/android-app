@@ -33,6 +33,9 @@ interface DownloadDao {
     @Query("UPDATE downloads SET status = :status, progress = :progress WHERE catNum = :catNum")
     suspend fun updateProgress(catNum: String, status: DownloadStatus, progress: Int)
 
+    @Query("UPDATE downloads SET status = :status WHERE catNum = :catNum")
+    suspend fun updateStatus(catNum: String, status: DownloadStatus)
+
     @Query("UPDATE downloads SET status = :status, filePath = :filePath, downloadedAt = :downloadedAt, totalBytes = :totalBytes WHERE catNum = :catNum")
     suspend fun markComplete(catNum: String, status: DownloadStatus = DownloadStatus.COMPLETE, filePath: String, downloadedAt: Long = System.currentTimeMillis(), totalBytes: Long = 0)
 }

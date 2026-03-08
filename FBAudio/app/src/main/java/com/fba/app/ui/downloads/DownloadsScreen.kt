@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,6 +25,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,13 +85,22 @@ fun DownloadsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(downloads, key = { it.catNum }) { download ->
-                    val sizeText = if (download.status == DownloadStatus.COMPLETE && download.totalBytes > 0)
-                        formatFileSize(download.totalBytes) else ""
+                    val subtitle = when (download.status) {
+                        DownloadStatus.COMPLETE -> {
+                            if (download.totalBytes > 0) formatFileSize(download.totalBytes) else null
+                        }
+                        DownloadStatus.FAILED -> {
+                            if (download.progress > 0) "Failed at ${download.progress}%"
+                            else "Failed"
+                        }
+                        DownloadStatus.DOWNLOADING -> "Downloading... ${download.progress}%"
+                        DownloadStatus.PENDING -> "Waiting..."
+                    }
                     TalkCard(
                         title = download.title,
                         speaker = download.speaker,
                         imageUrl = download.imageUrl,
-                        subtitle = sizeText.ifBlank { null },
+                        subtitle = subtitle,
                         onClick = { onTalkClick(download.catNum) },
                         trailing = {
                             when (download.status) {
@@ -110,11 +121,22 @@ fun DownloadsScreen(
                                     )
                                 }
                                 DownloadStatus.FAILED -> {
-                                    Icon(
-                                        Icons.Default.Error,
-                                        contentDescription = "Failed",
-                                        tint = MaterialTheme.colorScheme.error,
-                                    )
+                                    Row {
+                                        IconButton(onClick = { viewModel.retryDownload(download) }) {
+                                            Icon(
+                                                Icons.Default.Refresh,
+                                                contentDescription = "Retry",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                        IconButton(onClick = { viewModel.deleteDownload(download.catNum) }) {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = "Delete",
+                                                tint = MaterialTheme.colorScheme.error,
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

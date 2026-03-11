@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -80,7 +80,7 @@ fun HomeScreen(
                 SectionCard(
                     title = "Mitra Study",
                     subtitle = "Structured study courses",
-                    icon = { Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(32.dp)) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(32.dp)) },
                     onClick = onMitraStudyClick,
                 )
             }
@@ -149,7 +149,7 @@ fun HomeScreen(
                         )
                         if (progress > 0f && !isCompleted) {
                             LinearProgressIndicator(
-                                progress = progress,
+                                progress = { progress },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 2.dp)

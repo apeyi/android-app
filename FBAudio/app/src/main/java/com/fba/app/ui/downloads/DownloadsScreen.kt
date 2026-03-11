@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
@@ -65,7 +65,7 @@ fun DownloadsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
             )
@@ -115,7 +115,7 @@ fun DownloadsScreen(
                                 }
                                 DownloadStatus.DOWNLOADING, DownloadStatus.PENDING -> {
                                     CircularProgressIndicator(
-                                        progress = download.progress / 100f,
+                                        progress = { download.progress / 100f },
                                         modifier = Modifier.size(24.dp),
                                         strokeWidth = 2.dp,
                                     )

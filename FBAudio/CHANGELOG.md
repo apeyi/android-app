@@ -1,7 +1,11 @@
 # Changelog
 
-## v0.4.1
+## v0.5.0
 
+- Android 16 (API 36) support: bumped compileSdk/targetSdk to 36
+- Updated Media3 (ExoPlayer) 1.2.1 → 1.5.1 to fix foreground service type crash on Android 16
+- Updated AGP, Gradle, Compose, AndroidX dependencies for API 36 compatibility
+- Fixed all deprecation warnings (ArrowBack, MenuBook, QueueMusic, Divider, progress indicator lambdas)
 - Replaced Sangharakshita home screen image with the FBA default portrait
 
 ## v0.4.0

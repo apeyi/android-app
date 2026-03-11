@@ -53,7 +53,7 @@ fun MiniPlayer(
             Column {
                 if (state.duration > 0) {
                     LinearProgressIndicator(
-                        progress = (state.currentPosition.toFloat() / state.duration).coerceIn(0f, 1f),
+                        progress = { (state.currentPosition.toFloat() / state.duration).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(2.dp),

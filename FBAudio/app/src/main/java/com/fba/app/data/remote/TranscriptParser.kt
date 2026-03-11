@@ -22,7 +22,7 @@ object TranscriptParser {
         // Fallback: extract body text from the HTML page
         val doc = Jsoup.parse(html)
         return doc.select(".text-content, .content, article, main").text().ifBlank {
-            doc.body()?.text() ?: ""
+            doc.body().text()
         }
     }
 

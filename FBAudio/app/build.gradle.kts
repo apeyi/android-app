@@ -8,6 +8,11 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val generateSharedData by tasks.registering(GenerateSharedData::class) {
+    sharedDataDir = rootProject.file("../fbaudio-shared")
+    outputDir = file("${project.buildDir}/generated/shared")
+}
+
 android {
     namespace = "com.fba.app"
     compileSdk = 36
@@ -16,8 +21,8 @@ android {
         applicationId = "com.fba.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.5.0"
+        versionCode = 7
+        versionName = "0.5.1"
     }
 
     signingConfigs {
@@ -55,11 +60,18 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
+
+    sourceSets["main"].java.srcDir("${project.buildDir}/generated/shared")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn(generateSharedData)
 }
 
 dependencies {

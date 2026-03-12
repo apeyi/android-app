@@ -29,19 +29,24 @@ class DownloadWorker @AssistedInject constructor(
         const val KEY_TRACK_URLS = "track_urls"
         const val KEY_TRANSCRIPT_URL = "transcript_url"
 
+        /** Sanitize catNum to prevent path traversal — allow only alphanumeric and common prefixes. */
+        private fun sanitize(catNum: String): String =
+            catNum.replace(Regex("[^a-zA-Z0-9_-]"), "")
+
         fun trackFilePath(context: Context, catNum: String, trackIndex: Int): String {
             val downloadsDir = File(context.filesDir, "downloads")
-            return File(downloadsDir, "${catNum}_track${trackIndex}.mp3").absolutePath
+            return File(downloadsDir, "${sanitize(catNum)}_track${trackIndex}.mp3").absolutePath
         }
 
         fun transcriptFilePath(context: Context, catNum: String): String {
             val downloadsDir = File(context.filesDir, "downloads")
-            return File(downloadsDir, "${catNum}_transcript.txt").absolutePath
+            return File(downloadsDir, "${sanitize(catNum)}_transcript.txt").absolutePath
         }
     }
 
     override suspend fun doWork(): Result {
-        val catNum = inputData.getString(KEY_CAT_NUM) ?: return Result.failure()
+        val rawCatNum = inputData.getString(KEY_CAT_NUM) ?: return Result.failure()
+        val catNum = sanitize(rawCatNum)
         val trackUrls = inputData.getStringArray(KEY_TRACK_URLS)?.toList()
         val fallbackUrl = inputData.getString(KEY_AUDIO_URL)
 

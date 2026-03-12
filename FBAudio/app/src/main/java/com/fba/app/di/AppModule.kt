@@ -13,6 +13,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import com.fba.app.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
@@ -42,7 +43,8 @@ object AppModule {
             .followRedirects(true)
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BASIC
+                    level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC
+                            else HttpLoggingInterceptor.Level.NONE
                 }
             )
             .build()

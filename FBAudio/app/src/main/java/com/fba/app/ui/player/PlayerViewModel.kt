@@ -77,6 +77,15 @@ class PlayerViewModel @Inject constructor(
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             updatePosition()
+            if (playbackState == Player.STATE_ENDED) {
+                // Auto-advance to next chapter
+                val state = _uiState.value
+                val talk = state.currentTalk ?: return
+                val nextIndex = state.currentTrackIndex + 1
+                if (nextIndex < talk.tracks.size) {
+                    playTrackByIndex(nextIndex)
+                }
+            }
         }
     }
 

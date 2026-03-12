@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.1
+
+- Auto-advance to next chapter when a chapter finishes playing
+- Fixed progress bar dots introduced by Material3 update (removed stop indicators and track gaps)
+- Fixed player seek bar styling (thin track, no visible thumb)
+- Disabled HTTP logging in release builds to avoid leaking URLs to logcat
+- Sanitized catNum in download filenames to prevent path traversal
+- Extracted hardcoded Sangharakshita and Mitra Study data into shared JSON files with build-time codegen
+
 ## v0.5.0
 
 - Android 16 (API 36) support: bumped compileSdk/targetSdk to 36

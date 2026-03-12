@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,6 +58,9 @@ fun MiniPlayer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(2.dp),
+                        strokeCap = StrokeCap.Butt,
+                        gapSize = 0.dp,
+                        drawStopIndicator = {},
                     )
                 }
                 Row(

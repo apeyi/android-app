@@ -39,6 +39,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -202,6 +203,15 @@ fun PlayerScreen(
                     playerViewModel.seekTo((sliderPosition * state.duration).toLong())
                 },
                 modifier = Modifier.fillMaxWidth(),
+                thumb = {},
+                track = { sliderState ->
+                    SliderDefaults.Track(
+                        sliderState = sliderState,
+                        modifier = Modifier.height(4.dp),
+                        thumbTrackGapSize = 0.dp,
+                        drawStopIndicator = null,
+                    )
+                },
             )
 
             Row(

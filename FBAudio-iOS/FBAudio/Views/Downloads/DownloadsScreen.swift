@@ -42,14 +42,12 @@ struct DownloadsScreen: View {
             }
         }
         .navigationTitle("Downloads")
-        .toolbar(content: {
+        .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                if totalBytes > 0 {
-                    Text("Total: \(formatFileSize(totalBytes))")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                Text(totalBytes > 0 ? "Total: \(formatFileSize(totalBytes))" : "")
+                    .font(.caption).foregroundStyle(.secondary)
             }
-        })
+        }
     }
 
     private func trailingView(_ download: DownloadManager.DownloadState) -> AnyView {

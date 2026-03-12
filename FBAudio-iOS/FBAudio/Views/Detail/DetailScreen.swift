@@ -173,7 +173,8 @@ struct DetailScreen: View {
                 .font(.headline)
                 .padding(.top, 8)
 
-            ForEach(Array(zip(talk.tracks.indices, talk.tracks)), id: \.0) { index, track in
+            ForEach(0..<talk.tracks.count, id: \.self) { index in
+                let track = talk.tracks[index]
                 let isActive = player.currentTalk?.catNum == catNum
                 let isCurrent = isActive && player.currentTrackIndex == index
 

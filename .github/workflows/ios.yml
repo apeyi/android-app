@@ -1,0 +1,45 @@
+name: iOS Build & Test
+
+on:
+  push:
+    paths:
+      - 'FBAudio-iOS/**'
+      - 'fbaudio-shared/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'FBAudio-iOS/**'
+      - 'fbaudio-shared/**'
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: FBAudio-iOS
+        run: xcodegen generate
+
+      - name: Build
+        working-directory: FBAudio-iOS
+        run: |
+          xcodebuild build \
+            -project FBAudio.xcodeproj \
+            -scheme FBAudio \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Test
+        working-directory: FBAudio-iOS
+        run: |
+          xcodebuild test \
+            -project FBAudio.xcodeproj \
+            -scheme FBAudio \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO

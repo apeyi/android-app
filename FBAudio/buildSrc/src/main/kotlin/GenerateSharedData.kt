@@ -3,7 +3,6 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.File
 
 open class GenerateSharedData : DefaultTask() {
@@ -12,7 +11,7 @@ open class GenerateSharedData : DefaultTask() {
     var sharedDataDir: File = project.file("../../fbaudio-shared")
 
     @OutputDirectory
-    var outputDir: File = project.file("${project.buildDir}/generated/shared")
+    var outputDir: File = project.layout.buildDirectory.dir("generated/shared").get().asFile
 
     @TaskAction
     fun generate() {
@@ -22,6 +21,20 @@ open class GenerateSharedData : DefaultTask() {
 
         generateSangharakshita(gson, outPkg)
         generateMitraStudy(gson, outPkg)
+        copyImages()
+    }
+
+    private fun copyImages() {
+        val imagesDir = File(sharedDataDir, "images")
+        if (!imagesDir.exists()) return
+        val outRes = File(outputDir, "../res/drawable".replace("../", "")).let {
+            // Put generated resources in a separate directory
+            File(project.layout.buildDirectory.get().asFile, "generated/shared-res/drawable")
+        }
+        outRes.mkdirs()
+        imagesDir.listFiles()?.forEach { file ->
+            file.copyTo(File(outRes, file.name), overwrite = true)
+        }
     }
 
     private fun generateSangharakshita(gson: Gson, outDir: File) {

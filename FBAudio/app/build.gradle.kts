@@ -68,6 +68,7 @@ android {
     }
 
     sourceSets["main"].java.srcDir("${project.buildDir}/generated/shared")
+    sourceSets["main"].res.srcDir("${project.buildDir}/generated/shared-res")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

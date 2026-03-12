@@ -39,10 +39,10 @@ enum TranscriptParser {
 
     static func contentToPlainText(_ content: String) -> String {
         guard !content.isEmpty, let doc = try? SwiftSoup.parse(content) else { return "" }
-        doc.outputSettings().prettyPrint(prettyPrint: false)
+        doc.outputSettings().prettyPrint(pretty: false)
         let selectors = "p, br, h1, h2, h3, h4, h5, h6, blockquote, li"
         guard let elements = try? doc.select(selectors) else {
-            return (try? doc.wholeText())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return (try? doc.text())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         }
         var sb = ""
         for el in elements {
@@ -52,7 +52,7 @@ enum TranscriptParser {
             }
         }
         if !sb.isEmpty { return sb.trimmingCharacters(in: .whitespacesAndNewlines) }
-        return (try? doc.wholeText())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return (try? doc.text())?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
     private static func extractBalancedBraces(_ data: String) -> String? {

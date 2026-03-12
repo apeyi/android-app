@@ -191,7 +191,7 @@ actor FBAScraper {
 
     // MARK: - Browse
 
-    func fetchBrowseCategories() -> [BrowseCategory] {
+    nonisolated func fetchBrowseCategories() -> [BrowseCategory] {
         var categories: [BrowseCategory] = []
 
         categories.append(BrowseCategory(id: "Sangharakshita", name: "Sangharakshita",

@@ -212,6 +212,7 @@ struct BrowseScreen: View {
         case .speaker(let name):
             await loadSpeaker(name)
         case .series(let urlOrName):
+            selectedCategory = BrowseCategory(id: "series", name: "Series", type: .series, browseUrl: urlOrName)
             await loadBrowseUrl(urlOrName)
         case nil:
             categories = TalkRepository.shared.getBrowseCategories()
@@ -253,6 +254,10 @@ struct BrowseScreen: View {
         do {
             let page = try await TalkRepository.shared.getTalksByBrowseUrl(url)
             talks = page.items
+            if !page.title.isEmpty {
+                selectedCategory = BrowseCategory(id: selectedCategory?.id ?? "browse", name: page.title,
+                                                   type: selectedCategory?.type ?? .series, browseUrl: url)
+            }
         } catch {
             self.error = friendlyError(error)
         }

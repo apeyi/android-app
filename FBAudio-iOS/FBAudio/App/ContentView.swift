@@ -8,7 +8,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
+            TabView(selection: tabSelection) {
                 NavigationStack(path: $navigationPath) {
                     HomeScreen(
                         onTalkClick: { navigateToDetail($0) },
@@ -28,7 +28,12 @@ struct ContentView: View {
                 .tag(0)
 
                 NavigationStack {
-                    SearchScreen(onTalkClick: { navigateToDetail($0) })
+                    SearchScreen(onTalkClick: { catNum in
+                        selectedTab = 0
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            navigateToDetail(catNum)
+                        }
+                    })
                 }
                 .tabItem {
                     Label("Search", systemImage: "magnifyingglass")
@@ -36,7 +41,12 @@ struct ContentView: View {
                 .tag(1)
 
                 NavigationStack {
-                    DownloadsScreen(onTalkClick: { navigateToDetail($0) })
+                    DownloadsScreen(onTalkClick: { catNum in
+                        selectedTab = 0
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            navigateToDetail(catNum)
+                        }
+                    })
                 }
                 .tabItem {
                     Label("Downloads", systemImage: "arrow.down.circle")
@@ -69,6 +79,19 @@ struct ContentView: View {
         } message: {
             Text("You've finished listening. Remove the offline files?")
         }
+    }
+
+    // Tapping the already-selected Home tab pops to root
+    private var tabSelection: Binding<Int> {
+        Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab && newTab == 0 {
+                    navigationPath = NavigationPath()
+                }
+                selectedTab = newTab
+            }
+        )
     }
 
     // MARK: - Navigation

@@ -52,6 +52,12 @@ class AudioPlayer: ObservableObject {
         currentTrackIndex = trackIndex
         isVisible = true
 
+        // Set duration from metadata immediately (player will update when ready)
+        let metaDuration = talk.tracks[safe: trackIndex]?.durationSeconds ?? talk.durationSeconds
+        if metaDuration > 0 {
+            duration = TimeInterval(metaDuration)
+        }
+
         let url = audioUrl(for: talk, trackIndex: trackIndex)
         guard let url else { return }
 
@@ -70,6 +76,11 @@ class AudioPlayer: ObservableObject {
     func playTrackByIndex(_ index: Int) {
         guard let talk = currentTalk, index < talk.tracks.count else { return }
         currentTrackIndex = index
+
+        let metaDuration = talk.tracks[safe: index]?.durationSeconds ?? talk.durationSeconds
+        if metaDuration > 0 {
+            duration = TimeInterval(metaDuration)
+        }
 
         let url = audioUrl(for: talk, trackIndex: index)
         guard let url else { return }

@@ -2,7 +2,6 @@ package com.fba.app.ui.navigation
 
 object Routes {
     const val HOME = "home"
-    const val BROWSE = "browse"
     const val SEARCH = "search"
     const val DETAIL = "detail/{catNum}"
     const val DOWNLOADS = "downloads"

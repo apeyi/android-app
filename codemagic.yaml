@@ -20,20 +20,26 @@ workflows:
 
       - name: Build
         script: |
+          set -o pipefail
           cd FBAudio-iOS
           xcodebuild build \
             -project FBAudio.xcodeproj \
             -scheme FBAudio \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee ../build.log
 
       - name: Test
         script: |
+          set -o pipefail
           cd FBAudio-iOS
           xcodebuild test \
             -project FBAudio.xcodeproj \
             -scheme FBAudio \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee ../test.log
+
+    artifacts:
+      - build.log
+      - test.log

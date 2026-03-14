@@ -82,11 +82,17 @@ fun BrowseScreen(
                             // Otherwise pop back to the previous screen entirely
                             val canGoBack = when {
                                 initialSangharakshitaSeries && state.selectedCategory?.id?.startsWith("sang_series_") == true -> true
-                                initialMitraStudy && state.showingSubCategories -> true
+                                initialMitraStudy && (state.showingSubCategories || state.selectedCategory?.type == CategoryType.MITRA_MODULE) -> true
                                 else -> false
                             }
-                            if (canGoBack) viewModel.clearSelection()
-                            else onBack()
+                            if (canGoBack) {
+                                viewModel.clearSelection()
+                                // If clearSelection brought us back to root categories, pop nav instead
+                                val newState = viewModel.uiState.value
+                                if (!newState.showingSubCategories && newState.selectedCategory == null) {
+                                    onBack()
+                                }
+                            } else onBack()
                         } else if (state.selectedCategory != null || state.showingSubCategories) {
                             viewModel.clearSelection()
                         } else {

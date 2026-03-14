@@ -8,15 +8,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.fba.app.ui.navigation.NavGraph
@@ -34,6 +37,26 @@ fun FBAApp() {
         val currentRoute = navBackStackEntry?.destination?.route
 
         val hideBottomBar = currentRoute == Routes.PLAYER
+        val playerState by playerViewModel.uiState.collectAsStateWithLifecycle()
+
+        // Post-playback delete prompt for downloaded talks
+        if (playerState.showDeleteDownloadPrompt) {
+            AlertDialog(
+                onDismissRequest = { playerViewModel.dismissDeletePrompt() },
+                title = { Text("Delete download?") },
+                text = { Text("You've finished listening. Remove the offline files to free up space?") },
+                confirmButton = {
+                    TextButton(onClick = { playerViewModel.confirmDeleteAfterPlayback() }) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { playerViewModel.dismissDeletePrompt() }) {
+                        Text("Keep")
+                    }
+                },
+            )
+        }
 
         Scaffold(
             bottomBar = {

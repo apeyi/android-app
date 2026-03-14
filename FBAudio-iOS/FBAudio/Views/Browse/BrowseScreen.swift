@@ -12,13 +12,14 @@ struct BrowseScreen: View {
         case series(String)
     }
 
+    @Environment(\.dismiss) private var dismiss
     @State private var categories: [BrowseCategory] = []
     @State private var selectedCategory: BrowseCategory?
     @State private var talks: [SearchResult] = []
     @State private var isLoadingCategories = false
     @State private var isLoadingTalks = false
     @State private var error: String?
-    @State private var navigationStack: [BrowseCategory] = []
+    @State private var mitraStack: [BrowseCategory] = []
 
     // Decade/year filtering
     @State private var selectedDecade: Int?
@@ -36,7 +37,59 @@ struct BrowseScreen: View {
         }
         .navigationTitle(selectedCategory?.name ?? "Browse")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(canGoBackInternally)
+        .toolbar {
+            if canGoBackInternally {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: goBack) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                    }
+                }
+            }
+        }
         .task { await loadInitial() }
+    }
+
+    private var canGoBackInternally: Bool {
+        switch initialMode {
+        case .mitraStudy:
+            return selectedCategory != nil || !mitraStack.isEmpty
+        case .sangharakshitaSeries:
+            return selectedCategory?.id.hasPrefix("sang_series_") == true
+        default:
+            return false
+        }
+    }
+
+    private func goBack() {
+        // Sangharakshita series: if viewing a series' talks, go back to series list
+        if let cat = selectedCategory, cat.id.hasPrefix("sang_series_") {
+            categories = SharedDataLoader.sangharakshitaSeriesAsCategories()
+            selectedCategory = nil
+            talks = []
+            return
+        }
+
+        // Mitra Study: pop the stack
+        if !mitraStack.isEmpty {
+            mitraStack.removeLast()
+            if let parent = mitraStack.last {
+                mitraStack.removeLast() // will be re-added by selectCategory
+                selectCategory(parent)
+            } else {
+                // Back to year list
+                categories = SharedDataLoader.yearCategories()
+                selectedCategory = nil
+                talks = []
+            }
+            return
+        }
+
+        // Nothing left to go back to internally — pop nav
+        dismiss()
     }
 
     // MARK: - Categories View
@@ -166,26 +219,31 @@ struct BrowseScreen: View {
     }
 
     private func selectCategory(_ category: BrowseCategory) {
-        selectedCategory = category
         selectedDecade = nil
         selectedYear = nil
 
         switch category.type {
         case .sangharakshita:
+            selectedCategory = category
             talks = SharedDataLoader.sangharakshitaTalks
         case .mitraStudy:
+            mitraStack.append(category)
             categories = SharedDataLoader.yearCategories()
             selectedCategory = nil
         case .mitraYear:
+            mitraStack.append(category)
             let yearStr = category.browseUrl.replacingOccurrences(of: "mitra://year/", with: "")
             if let year = Int(yearStr) {
                 categories = SharedDataLoader.moduleCategories(year: year)
                 selectedCategory = nil
             }
         case .mitraModule:
+            mitraStack.append(category)
             let moduleId = category.browseUrl.replacingOccurrences(of: "mitra://module/", with: "")
             talks = SharedDataLoader.moduleTalksAsSearchResults(moduleId)
+            selectedCategory = category
         default:
+            selectedCategory = category
             Task { await loadBrowseUrl(category.browseUrl) }
         }
     }

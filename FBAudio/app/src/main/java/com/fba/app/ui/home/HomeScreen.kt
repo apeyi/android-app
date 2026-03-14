@@ -25,7 +25,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,8 +46,6 @@ import com.fba.app.ui.components.formatDuration
 @Composable
 fun HomeScreen(
     onTalkClick: (String) -> Unit,
-    onBrowseClick: () -> Unit,
-    onSearchClick: () -> Unit,
     onSangharakshitaByYearClick: () -> Unit = {},
     onSangharakshitaSeriesClick: (String) -> Unit = {},
     onMitraStudyClick: () -> Unit = {},
@@ -207,24 +204,42 @@ private fun SangharakshitaSection(
                 Spacer(Modifier.height(12.dp))
 
                 // By Year subsection
-                ListItem(
-                    headlineContent = { Text("By Year") },
-                    supportingContent = { Text("Browse all talks by decade and year") },
-                    trailingContent = {
-                        Icon(Icons.Default.ChevronRight, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable(onClick = onByYearClick),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onByYearClick)
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("By Year", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Browse all talks by decade and year",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
 
                 // Series subsection
-                ListItem(
-                    headlineContent = { Text("Series") },
-                    supportingContent = { Text("$seriesCount lecture series") },
-                    trailingContent = {
-                        Icon(Icons.Default.ChevronRight, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable { onSeriesClick("sang://series") },
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSeriesClick("sang://series") }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Series", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "$seriesCount lecture series",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

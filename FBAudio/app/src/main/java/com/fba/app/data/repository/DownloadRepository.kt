@@ -67,6 +67,13 @@ class DownloadRepository @Inject constructor(
         WorkManager.getInstance(context).enqueue(request)
     }
 
+    suspend fun deleteAllDownloads() {
+        val allDownloads = downloadDao.getAllDownloadsOnce()
+        for (download in allDownloads) {
+            deleteDownload(download.catNum)
+        }
+    }
+
     suspend fun deleteDownload(catNum: String) {
         val download = downloadDao.getDownload(catNum)
         // Delete old-style single file

@@ -29,20 +29,12 @@ fun NavGraph(
         composable(Routes.HOME) {
             HomeScreen(
                 onTalkClick = { navController.navigate(Routes.detail(it)) },
-                onBrowseClick = { navController.navigate(Routes.BROWSE) },
-                onSearchClick = { navController.navigate(Routes.SEARCH) },
                 onSangharakshitaByYearClick = { navController.navigate(Routes.SANGHARAKSHITA_BY_YEAR) },
                 onSangharakshitaSeriesClick = { navController.navigate(Routes.SANGHARAKSHITA_SERIES) },
                 onMitraStudyClick = { navController.navigate(Routes.MITRA_STUDY) },
                 onDonateClick = {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.freebuddhistaudio.com/donate/")))
                 },
-            )
-        }
-        composable(Routes.BROWSE) {
-            BrowseScreen(
-                onTalkClick = { navController.navigate(Routes.detail(it)) },
-                onBack = { navController.popBackStack() },
             )
         }
         composable(Routes.SEARCH) {

@@ -4,6 +4,9 @@ struct DownloadsScreen: View {
     @ObservedObject private var downloadManager = DownloadManager.shared
     let onTalkClick: (String) -> Void
 
+    @State private var deleteConfirmCatNum: String?
+    @State private var showDeleteAllConfirm = false
+
     private var downloads: [DownloadManager.DownloadState] {
         Array(downloadManager.downloads.values).sorted { $0.catNum < $1.catNum }
     }
@@ -44,9 +47,40 @@ struct DownloadsScreen: View {
         .navigationTitle("Downloads")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Text(totalBytes > 0 ? "Total: \(formatFileSize(totalBytes))" : "")
-                    .font(.caption).foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    if totalBytes > 0 {
+                        Text("Total: \(formatFileSize(totalBytes))")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if !downloads.isEmpty {
+                        Button(action: { showDeleteAllConfirm = true }) {
+                            Image(systemName: "trash.circle")
+                        }
+                    }
+                }
             }
+        }
+        .alert("Delete download?", isPresented: Binding(
+            get: { deleteConfirmCatNum != nil },
+            set: { if !$0 { deleteConfirmCatNum = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let catNum = deleteConfirmCatNum {
+                    downloadManager.deleteDownload(catNum: catNum)
+                }
+                deleteConfirmCatNum = nil
+            }
+            Button("Cancel", role: .cancel) { deleteConfirmCatNum = nil }
+        } message: {
+            Text("This will remove the offline files.")
+        }
+        .alert("Delete all downloads?", isPresented: $showDeleteAllConfirm) {
+            Button("Delete All", role: .destructive) {
+                downloadManager.deleteAllDownloads()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will remove all offline files.")
         }
     }
 
@@ -54,7 +88,7 @@ struct DownloadsScreen: View {
         switch download.status {
         case .complete:
             return AnyView(
-                Button(action: { downloadManager.deleteDownload(catNum: download.catNum) }) {
+                Button(action: { deleteConfirmCatNum = download.catNum }) {
                     Image(systemName: "trash").foregroundStyle(.red)
                 }
             )
@@ -76,7 +110,7 @@ struct DownloadsScreen: View {
                     }) {
                         Image(systemName: "arrow.clockwise").foregroundStyle(Color.saffronOrange)
                     }
-                    Button(action: { downloadManager.deleteDownload(catNum: download.catNum) }) {
+                    Button(action: { deleteConfirmCatNum = download.catNum }) {
                         Image(systemName: "trash").foregroundStyle(.red)
                     }
                 }

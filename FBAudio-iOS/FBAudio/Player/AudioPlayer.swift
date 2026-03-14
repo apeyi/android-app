@@ -14,6 +14,7 @@ class AudioPlayer: ObservableObject {
     @Published var currentTrackIndex = 0
     @Published var playbackSpeed: Float = 1.0
     @Published var isVisible = false
+    @Published var showDeleteDownloadPrompt = false
 
     private var player: AVPlayer?
     private var timeObserver: Any?
@@ -157,7 +158,20 @@ class AudioPlayer: ObservableObject {
         } else {
             isPlaying = false
             savePlaybackState()
+            if downloadManager.isDownloaded(talk.catNum) {
+                showDeleteDownloadPrompt = true
+            }
         }
+    }
+
+    func dismissDeletePrompt() {
+        showDeleteDownloadPrompt = false
+    }
+
+    func confirmDeleteAfterPlayback() {
+        guard let talk = currentTalk else { return }
+        downloadManager.deleteDownload(catNum: talk.catNum)
+        showDeleteDownloadPrompt = false
     }
 
     // MARK: - Controls

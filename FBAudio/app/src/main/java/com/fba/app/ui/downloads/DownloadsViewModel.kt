@@ -28,6 +28,12 @@ class DownloadsViewModel @Inject constructor(
         }
     }
 
+    fun deleteAllDownloads() {
+        viewModelScope.launch {
+            downloadRepository.deleteAllDownloads()
+        }
+    }
+
     fun retryDownload(download: DownloadEntity) {
         viewModelScope.launch {
             // Delete the failed entry first

@@ -1,64 +1,74 @@
 package com.fba.app.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
-private val SaffronOrange = Color(0xFFE8891D)
-private val DeepSaffron = Color(0xFFC5711A)
-private val WarmGold = Color(0xFFF5C842)
+// FBA website brand color: #A85D21
+private val FbaBrown = Color(0xFFA85D21)
+private val FbaBrownLight = Color(0xFFC47A3A)
+private val FbaBrownDark = Color(0xFF7E4518)
 private val DarkBrown = Color(0xFF3E2723)
-private val Cream = Color(0xFFFFF8E1)
 
 private val LightColorScheme = lightColorScheme(
-    primary = SaffronOrange,
+    primary = FbaBrown,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFDDB3),
+    primaryContainer = Color(0xFFFFDCC2),
     onPrimaryContainer = DarkBrown,
-    secondary = DeepSaffron,
+    secondary = FbaBrownLight,
     onSecondary = Color.White,
-    tertiary = WarmGold,
-    background = Cream,
+    secondaryContainer = Color(0xFFFFE0C8),
+    onSecondaryContainer = DarkBrown,
+    tertiary = FbaBrownDark,
+    background = Color.White,
+    onBackground = Color(0xFF1C1B1F),
     surface = Color.White,
-    onBackground = DarkBrown,
-    onSurface = DarkBrown,
+    onSurface = Color(0xFF1C1B1F),
+    surfaceVariant = Color(0xFFF3EDE8),
+    onSurfaceVariant = Color(0xFF52443B),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFFAF6F3),
+    surfaceContainer = Color(0xFFF5F0EB),
+    surfaceContainerHigh = Color(0xFFEFEAE5),
+    surfaceContainerHighest = Color(0xFFE9E4DF),
+    outline = Color(0xFF85746A),
+    outlineVariant = Color(0xFFD7C9BE),
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = WarmGold,
+    primary = Color(0xFFFFB77C),
     onPrimary = DarkBrown,
-    primaryContainer = DeepSaffron,
-    onPrimaryContainer = Color(0xFFFFDDB3),
-    secondary = SaffronOrange,
+    primaryContainer = FbaBrownDark,
+    onPrimaryContainer = Color(0xFFFFDCC2),
+    secondary = Color(0xFFE8B896),
     onSecondary = DarkBrown,
-    tertiary = WarmGold,
+    secondaryContainer = Color(0xFF5A3A24),
+    onSecondaryContainer = Color(0xFFFFE0C8),
+    tertiary = Color(0xFFD4A373),
     background = Color(0xFF1A1210),
-    surface = Color(0xFF2A201C),
-    onBackground = Cream,
-    onSurface = Cream,
+    onBackground = Color(0xFFEDE0D8),
+    surface = Color(0xFF1A1210),
+    onSurface = Color(0xFFEDE0D8),
+    surfaceVariant = Color(0xFF3E302A),
+    onSurfaceVariant = Color(0xFFD7C9BE),
+    surfaceContainerLowest = Color(0xFF140E0B),
+    surfaceContainerLow = Color(0xFF221A16),
+    surfaceContainer = Color(0xFF2A201C),
+    surfaceContainerHigh = Color(0xFF352B26),
+    surfaceContainerHighest = Color(0xFF413630),
+    outline = Color(0xFFA08D83),
+    outlineVariant = Color(0xFF52443B),
 )
 
 @Composable
 fun FBATheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -144,6 +144,13 @@ class DownloadManager: ObservableObject {
         saveDownloads()
     }
 
+    func deleteAllDownloads() {
+        let catNums = Array(downloads.keys)
+        for catNum in catNums {
+            deleteDownload(catNum: catNum)
+        }
+    }
+
     // MARK: - Persistence
 
     private let savedDownloadsKey = "saved_downloads"

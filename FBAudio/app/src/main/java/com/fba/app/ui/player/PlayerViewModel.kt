@@ -39,6 +39,7 @@ data class PlayerUiState(
     val downloadStatus: DownloadStatus? = null,
     val playbackSpeed: Float = 1.0f,
     val currentTrackIndex: Int = 0,
+    val showDeleteDownloadPrompt: Boolean = false,
 )
 
 @HiltViewModel
@@ -84,6 +85,11 @@ class PlayerViewModel @Inject constructor(
                 val nextIndex = state.currentTrackIndex + 1
                 if (nextIndex < talk.tracks.size) {
                     playTrackByIndex(nextIndex)
+                } else {
+                    // Last chapter finished — prompt to delete if downloaded
+                    if (state.downloadStatus == DownloadStatus.COMPLETE) {
+                        _uiState.value = _uiState.value.copy(showDeleteDownloadPrompt = true)
+                    }
                 }
             }
         }
@@ -411,6 +417,19 @@ class PlayerViewModel @Inject constructor(
         val talk = _uiState.value.currentTalk ?: return
         val prevIndex = _uiState.value.currentTrackIndex - 1
         if (prevIndex >= 0) playTrackByIndex(prevIndex)
+    }
+
+    fun dismissDeletePrompt() {
+        _uiState.value = _uiState.value.copy(showDeleteDownloadPrompt = false)
+    }
+
+    fun confirmDeleteAfterPlayback() {
+        val catNum = _uiState.value.currentTalk?.catNum ?: return
+        _uiState.value = _uiState.value.copy(showDeleteDownloadPrompt = false)
+        viewModelScope.launch {
+            downloadRepository.deleteDownload(catNum)
+            _uiState.value = _uiState.value.copy(downloadStatus = null)
+        }
     }
 
     fun setPlaybackSpeed(speed: Float) {

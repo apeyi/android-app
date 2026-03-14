@@ -30,6 +30,9 @@ interface DownloadDao {
     @Query("DELETE FROM downloads WHERE catNum = :catNum")
     suspend fun delete(catNum: String)
 
+    @Query("SELECT * FROM downloads")
+    suspend fun getAllDownloadsOnce(): List<DownloadEntity>
+
     @Query("UPDATE downloads SET status = :status, progress = :progress WHERE catNum = :catNum")
     suspend fun updateProgress(catNum: String, status: DownloadStatus, progress: Int)
 

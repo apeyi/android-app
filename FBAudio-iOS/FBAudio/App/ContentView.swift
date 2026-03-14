@@ -63,6 +63,12 @@ struct ContentView: View {
                 }
             )
         }
+        .alert("Delete download?", isPresented: $player.showDeleteDownloadPrompt) {
+            Button("Delete", role: .destructive) { player.confirmDeleteAfterPlayback() }
+            Button("Keep", role: .cancel) { player.dismissDeletePrompt() }
+        } message: {
+            Text("You've finished listening. Remove the offline files?")
+        }
     }
 
     // MARK: - Navigation

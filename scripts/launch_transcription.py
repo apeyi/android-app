@@ -89,7 +89,7 @@ echo "=== WORKER {worker_id:02d} DONE ==="
 
 
 def create_release(tag, name, gh_token):
-    data = json.dumps({"tag_name": tag, "name": name, "draft": True}).encode()
+    data = json.dumps({"tag_name": tag, "name": name, "draft": False}).encode()
     req = urllib.request.Request(
         f"https://api.github.com/repos/{REPO}/releases",
         data=data,

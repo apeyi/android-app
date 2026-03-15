@@ -9,9 +9,10 @@ Usage:
 batch.json format:
     [{"catNum": "116", "audioUrls": ["https://...", ...]}, ...]
     - audioUrls: list of track/chapter URLs (usually 1, but can be multiple)
-    - If audioUrls is empty or missing, falls back to stream URL
+    - If audioUrls is empty or missing, fetches from FBA detail page
 
 Output: one .txt file per talk, named {catNum}.txt
+Uploads each transcript to a GitHub release as it completes (if GH_TOKEN and RELEASE_TAG are set).
 """
 
 import argparse
@@ -22,21 +23,23 @@ import time
 import urllib.request
 import urllib.parse
 import tempfile
-
 import re
 
 BASE_URL = "https://www.freebuddhistaudio.com"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Linux; Android 14) Chrome/120.0 Mobile Safari/537.36"}
+REPO = "apeyi/freeBuddhistAudio"
+
+
+def log(msg):
+    print(msg, flush=True)
 
 
 def fetch_html(url):
-    """Fetch HTML page."""
     req = urllib.request.Request(url, headers=HEADERS)
     return urllib.request.urlopen(req, timeout=30).read().decode()
 
 
 def get_track_urls(cat_num):
-    """Fetch actual audio track URLs from the talk detail page."""
     try:
         html = fetch_html(f"{BASE_URL}/audio/details?num={cat_num}")
         m = re.search(r'"tracks"\s*:\s*\[', html)
@@ -63,12 +66,11 @@ def get_track_urls(cat_num):
                             pass
                         break
     except Exception as e:
-        print(f"    Error fetching tracks for {cat_num}: {e}")
+        log(f"    Error fetching tracks for {cat_num}: {e}")
     return []
 
 
 def download_file(url, dest_path):
-    """Download a file from URL."""
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=120) as resp:
         with open(dest_path, "wb") as f:
@@ -80,6 +82,29 @@ def download_file(url, dest_path):
     return os.path.getsize(dest_path)
 
 
+def upload_transcript(cat_num, text, gh_token, release_tag):
+    """Upload a single transcript to the GitHub release."""
+    if not gh_token or not release_tag:
+        return
+    try:
+        req = urllib.request.Request(
+            f"https://api.github.com/repos/{REPO}/releases/tags/{release_tag}",
+            headers={"Authorization": f"token {gh_token}"}
+        )
+        resp = json.load(urllib.request.urlopen(req))
+        upload_url = resp["upload_url"].replace("{?name,label}", "")
+        data = text.encode("utf-8")
+        req2 = urllib.request.Request(
+            f"{upload_url}?name={cat_num}.txt",
+            data=data,
+            headers={"Authorization": f"token {gh_token}", "Content-Type": "text/plain"}
+        )
+        json.load(urllib.request.urlopen(req2))
+        log(f"    Uploaded {cat_num}.txt")
+    except Exception as e:
+        log(f"    Upload failed for {cat_num}: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Batch transcribe FBA talks")
     parser.add_argument("--input", required=True, help="JSON file with talk assignments")
@@ -89,13 +114,19 @@ def main():
 
     os.makedirs(args.output, exist_ok=True)
 
+    # GitHub upload config from env
+    gh_token = os.environ.get("GH_TOKEN", "")
+    release_tag = os.environ.get("RELEASE_TAG", "")
+
     with open(args.input) as f:
         talks = json.load(f)
 
-    print(f"Loading whisper model '{args.model}'...")
+    log(f"Loading whisper model '{args.model}'...")
     import whisper
     model = whisper.load_model(args.model)
-    print(f"Model loaded. Processing {len(talks)} talks.")
+    log(f"Model loaded. Processing {len(talks)} talks.")
+    if gh_token and release_tag:
+        log(f"Will upload each transcript to release '{release_tag}'")
 
     summary = []
     total_transcribe_seconds = 0
@@ -107,20 +138,20 @@ def main():
 
         # Skip if already done
         if os.path.exists(output_file) and os.path.getsize(output_file) > 0:
-            print(f"[{i+1}/{len(talks)}] {cat_num}: already done, skipping")
+            log(f"[{i+1}/{len(talks)}] {cat_num}: already done, skipping")
             summary.append({"catNum": cat_num, "status": "skipped"})
             continue
 
         # Fetch track URLs from detail page if not provided
         if not audio_urls:
-            print(f"  Fetching track URLs from detail page...")
+            log(f"  Fetching track URLs from detail page...")
             audio_urls = get_track_urls(cat_num)
             if not audio_urls:
-                print(f"  No audio URLs found, skipping")
+                log(f"  No audio URLs found, skipping")
                 summary.append({"catNum": cat_num, "status": "error", "error": "no audio URLs"})
                 continue
 
-        print(f"[{i+1}/{len(talks)}] {cat_num}: {len(audio_urls)} track(s)")
+        log(f"[{i+1}/{len(talks)}] {cat_num}: {len(audio_urls)} track(s)")
 
         try:
             full_text = ""
@@ -145,18 +176,22 @@ def main():
                     full_text += text
 
                     if len(audio_urls) > 1:
-                        print(f"  Track {track_idx+1}/{len(audio_urls)}: {elapsed:.0f}s, {len(text)} chars")
+                        log(f"    Track {track_idx+1}/{len(audio_urls)}: {elapsed:.0f}s, {len(text)} chars")
                 finally:
                     if os.path.exists(tmp_audio):
                         os.remove(tmp_audio)
 
             total_transcribe_seconds += total_elapsed
 
-            # Save transcript
+            # Save transcript locally
             with open(output_file, "w") as f:
                 f.write(full_text)
 
-            print(f"  Done in {total_elapsed:.0f}s, {len(full_text)} chars, {total_size/1024/1024:.1f}MB audio")
+            log(f"  Done in {total_elapsed:.0f}s, {len(full_text)} chars, {total_size/1024/1024:.1f}MB audio")
+
+            # Upload immediately
+            upload_transcript(cat_num, full_text, gh_token, release_tag)
+
             summary.append({
                 "catNum": cat_num,
                 "status": "ok",
@@ -167,7 +202,7 @@ def main():
             })
 
         except Exception as e:
-            print(f"  ERROR: {e}")
+            log(f"  ERROR: {e}")
             summary.append({"catNum": cat_num, "status": "error", "error": str(e)})
 
     # Write summary
@@ -184,7 +219,7 @@ def main():
 
     ok = sum(1 for s in summary if s["status"] == "ok")
     err = sum(1 for s in summary if s["status"] == "error")
-    print(f"\nBATCH_COMPLETE: {ok} transcribed, {err} errors, {total_transcribe_seconds:.0f}s GPU time")
+    log(f"\nBATCH_COMPLETE: {ok} transcribed, {err} errors, {total_transcribe_seconds:.0f}s GPU time")
 
 
 if __name__ == "__main__":

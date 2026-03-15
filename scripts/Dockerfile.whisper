@@ -1,0 +1,5 @@
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+
+# Install whisper and pre-download the turbo model
+RUN pip install --no-cache-dir openai-whisper && \
+    python3 -c "import whisper; whisper.load_model('turbo')"

@@ -104,6 +104,100 @@ grep "error:" /tmp/artifacts/build.log
 4. Wait ~3 min, check status
 5. If failed, download build.log artifact, find errors, fix, repeat
 
+## Appetize.io (iOS Simulator Preview)
+
+Upload simulator .app zip to Appetize for browser-based preview:
+
+```bash
+# Upload new app
+curl -X POST https://api.appetize.io/v1/apps \
+  -H "X-API-KEY: $APPETIZE_API_TOKEN" \
+  -F "file=@/workspace/FBAudio-simulator.zip" \
+  -F "platform=ios"
+
+# Update existing app
+curl -X POST https://api.appetize.io/v1/apps/PUBLIC_KEY \
+  -H "X-API-KEY: $APPETIZE_API_TOKEN" \
+  -F "file=@/workspace/FBAudio-simulator.zip" \
+  -F "platform=ios"
+```
+
+Current public key: `qlilkuml5qqe2xwfjhn5xwwv3e`
+Public URL: https://appetize.io/app/qlilkuml5qqe2xwfjhn5xwwv3e
+
+The simulator .app zip is exported as a Codemagic build artifact (`FBAudio-simulator.zip`).
+
+## Vast.ai (GPU Compute)
+
+The `VASTAI_API_KEY` env variable is available.
+
+### Search for GPU offers
+
+```bash
+curl -s -X POST "https://console.vast.ai/api/v0/bundles/" \
+  -H "Authorization: Bearer $VASTAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "limit": 5,
+    "type": "on-demand",
+    "verified": {"eq": true},
+    "rentable": {"eq": true},
+    "rented": {"eq": false},
+    "gpu_name": {"eq": "RTX 2080 Ti"},
+    "order": [["dph_total", "asc"]]
+  }'
+```
+
+### Create an instance
+
+```bash
+curl -s -X PUT "https://console.vast.ai/api/v0/asks/OFFER_ID/" \
+  -H "Authorization: Bearer $VASTAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image": "pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime",
+    "disk": 20,
+    "runtype": "ssh",
+    "onstart": "#!/bin/bash\nYOUR_SCRIPT_HERE",
+    "label": "my-instance"
+  }'
+```
+
+**Important**: Use `runtype: "ssh"` with `onstart` as a bash script (starting with `#!/bin/bash`). Do NOT use `runtype: "args"` — it passes the onstart as entrypoint args, not a shell command.
+
+### Check instance status
+
+```bash
+curl -s "https://console.vast.ai/api/v0/instances/" \
+  -H "Authorization: Bearer $VASTAI_API_KEY"
+```
+
+### Get instance logs
+
+```bash
+# Request logs (returns S3 URL)
+curl -s -X PUT "https://console.vast.ai/api/v0/instances/request_logs/INSTANCE_ID/" \
+  -H "Authorization: Bearer $VASTAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"tail": "100"}'
+
+# For system/daemon logs, add: "daemon_logs": "true"
+# The result_url may take a few seconds to become available on S3
+```
+
+### Destroy an instance
+
+```bash
+curl -s -X DELETE "https://console.vast.ai/api/v0/instances/INSTANCE_ID/" \
+  -H "Authorization: Bearer $VASTAI_API_KEY"
+```
+
+### Pricing notes
+
+- RTX 2080 Ti: ~$0.06/hr (cheapest, good for Whisper transcription)
+- Instance boot + docker pull takes 1-2 min
+- Container logs (from onstart) may take a minute to appear; daemon logs are available sooner
+
 ## Key Architecture Notes
 
 - Android theme: hardcoded FBA brand color `#A85D21`, no dynamic/Material You colors
@@ -112,3 +206,6 @@ grep "error:" /tmp/artifacts/build.log
 - Shared data uses `fixTitle()` to move "The/A/An" from end to front of Sangharakshita talk titles
 - Download filenames are sanitized (alphanumeric + `_-` only) to prevent path traversal
 - HTTP logging disabled in release builds (Android)
+
+# currentDate
+Today's date is 2026-03-15.

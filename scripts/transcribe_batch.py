@@ -197,6 +197,15 @@ def main():
             log(f"  ERROR: {e}")
             err_count += 1
 
+    # Save list of uploaded catNums for cleanup
+    uploaded_file = os.path.join(args.output, "uploaded_catnums.json")
+    uploaded_list = []
+    for fn in os.listdir(args.output):
+        if fn.endswith(".txt"):
+            uploaded_list.append(fn.replace(".txt", ""))
+    with open(uploaded_file, "w") as f:
+        json.dump(uploaded_list, f)
+
     log(f"\nBATCH_COMPLETE: {ok_count} done, {err_count} errors, {uploaded_count} uploaded, {total_seconds:.0f}s GPU")
 
 

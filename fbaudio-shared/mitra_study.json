@@ -43,6 +43,12 @@
           "title": "The Approach to Buddhism",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "139",
+          "title": "The Taste of Freedom",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -57,6 +63,12 @@
           "title": "The Ten Pillars of Buddhism",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "LOC3546",
+          "title": "The Ten Pillars of Buddhism Part 1",
+          "speaker": "Padmavajra",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/74F3308hMMvn.jpg"
         }
       ]
     },
@@ -65,7 +77,14 @@
       "name": "Meditation",
       "year": 1,
       "seriesCodes": [],
-      "talks": []
+      "talks": [
+        {
+          "catNum": "135",
+          "title": "A System of Meditation",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        }
+      ]
     },
     {
       "id": "y1_wisdom",
@@ -84,6 +103,12 @@
           "title": "Mind: Reactive and Creative",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "103",
+          "title": "The Symbolism of the Tibetan Wheel of Life",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -98,6 +123,12 @@
           "title": "Triratna Buddhism",
           "speaker": "Vadanya",
           "imageUrl": "https://www.freebuddhistaudio.com/images/people/vadanya.jpg"
+        },
+        {
+          "catNum": "36",
+          "title": "The Psychology of Buddhist Ritual",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -156,6 +187,12 @@
           "title": "Samadhi, the Higher Consciousness: Right Meditation",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "185",
+          "title": "The Transcendental Eightfold Path",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -176,6 +213,12 @@
           "title": "Revering and Relying Upon the Dharma",
           "speaker": "Subhuti",
           "imageUrl": "https://www.freebuddhistaudio.com/m/OKSt7sgcGxBe.jpg"
+        },
+        {
+          "catNum": "LOC217",
+          "title": "Twenty Four Nidana Reflection",
+          "speaker": "Dhivan",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/fVZq9magtguB.jpg"
         }
       ]
     },
@@ -216,6 +259,12 @@
           "title": "The Five Aspects of Dharma Life - Spiritual Rebirth",
           "speaker": "Subhuti",
           "imageUrl": "https://www.freebuddhistaudio.com/m/OKSt7sgcGxBe.jpg"
+        },
+        {
+          "catNum": "LOC1715",
+          "title": "The Five Aspects of Dharma Life - Applying the Five Aspects in Daily Life",
+          "speaker": "Subhuti",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/OKSt7sgcGxBe.jpg"
         }
       ]
     },
@@ -238,6 +287,12 @@
           "title": "The Defects and Dangers of Samsara",
           "speaker": "Maitreyi",
           "imageUrl": "https://www.freebuddhistaudio.com/images/people/maitreyi.jpg"
+        },
+        {
+          "catNum": "LOC51",
+          "title": "Maturing the Mind - Introduction to the Four Reminders",
+          "speaker": "Kulaprabha",
+          "imageUrl": "https://www.freebuddhistaudio.com/images/people/kulaprabha.jpg"
         }
       ]
     },
@@ -308,6 +363,12 @@
           "title": "Living with Awareness (A Guide to the Satipatthana Sutta) - Part 2",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "LOC1018",
+          "title": "Living with Awareness (A Guide to the Satipatthana Sutta) - Part 4",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -322,6 +383,12 @@
           "title": "Commitment and Spiritual Community",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "LOC2121",
+          "title": "Year of Spiritual Community Talks",
+          "speaker": "Various",
+          "imageUrl": "https://www.freebuddhistaudio.com/images/people/various.jpg"
         }
       ]
     },
@@ -332,7 +399,14 @@
       "seriesCodes": [
         "X100"
       ],
-      "talks": []
+      "talks": [
+        {
+          "catNum": "LOC517",
+          "title": "Triratna Buddhism",
+          "speaker": "Vadanya",
+          "imageUrl": "https://www.freebuddhistaudio.com/images/people/vadanya.jpg"
+        }
+      ]
     },
     {
       "id": "y3_pali",
@@ -345,6 +419,12 @@
           "title": "Readings from the Pali Canon",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "LOC45",
+          "title": "The Early Teachings of the Buddha",
+          "speaker": "Ratnaguna",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/4KlYlo7LoMfB.jpg"
         }
       ]
     },
@@ -379,6 +459,12 @@
           "title": "Seeing with Insight - Dhammapada Verses 277 to 279",
           "speaker": "Padmavajra",
           "imageUrl": "https://www.freebuddhistaudio.com/m/74F3308hMMvn.jpg"
+        },
+        {
+          "catNum": "OM794",
+          "title": "Flowers - Dhammapada Verses 44 to 59",
+          "speaker": "Padmavajra",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/74F3308hMMvn.jpg"
         }
       ]
     },
@@ -393,6 +479,12 @@
           "title": "Towards Insight - Contemplations of the Buddha",
           "speaker": "Dayanandi and Ratnaguna",
           "imageUrl": "https://www.freebuddhistaudio.com/images/talks/LOC100.jpg"
+        },
+        {
+          "catNum": "LOC101",
+          "title": "Towards Insight - Contemplation of Impermanence",
+          "speaker": "Dayanandi and Ratnaguna",
+          "imageUrl": "https://www.freebuddhistaudio.com/images/talks/LOC101.jpg"
         }
       ]
     },
@@ -401,7 +493,14 @@
       "name": "Mahayana Perspectives",
       "year": 3,
       "seriesCodes": [],
-      "talks": []
+      "talks": [
+        {
+          "catNum": "143",
+          "title": "The Magic of a Mahayana Sutra",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        }
+      ]
     },
     {
       "id": "y4_bodhisattva",
@@ -434,6 +533,12 @@
           "title": "The Bodhisattva Ideal: Wisdom and Compassion in Buddhism - Part 1",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "LOC3419",
+          "title": "The Bodhisattva Ideal - Talk 6",
+          "speaker": "Subhuti",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/OKSt7sgcGxBe.jpg"
         }
       ]
     },
@@ -442,7 +547,14 @@
       "name": "Nature of the Sangha",
       "year": 4,
       "seriesCodes": [],
-      "talks": []
+      "talks": [
+        {
+          "catNum": "142",
+          "title": "Commitment and Spiritual Community",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        }
+      ]
     },
     {
       "id": "y4_symbols",
@@ -461,6 +573,12 @@
         {
           "catNum": "104",
           "title": "The Tantric Symbolism of the Stupa",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "45",
+          "title": "The Mandala: Tantric Symbol of Integration",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
@@ -497,6 +615,12 @@
           "title": "The Speech Precepts",
           "speaker": "Sahajatara",
           "imageUrl": "https://www.freebuddhistaudio.com/images/people/sahajatara.jpg"
+        },
+        {
+          "catNum": "LOC3567",
+          "title": "The Ethics of Mindfulness",
+          "speaker": "Maitrisiddhi",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/t3k3UrtQ0pxL.jpg"
         }
       ]
     },
@@ -517,6 +641,12 @@
           "title": "The Psychology of Spiritual Development",
           "speaker": "Sangharakshita",
           "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
+        },
+        {
+          "catNum": "31",
+          "title": "Mind: Reactive and Creative",
+          "speaker": "Sangharakshita",
+          "imageUrl": "https://www.freebuddhistaudio.com/m/uKp8bNgbigXw.jpg"
         }
       ]
     },
@@ -527,7 +657,14 @@
       "seriesCodes": [
         "X100"
       ],
-      "talks": []
+      "talks": [
+        {
+          "catNum": "LOC517",
+          "title": "Triratna Buddhism",
+          "speaker": "Vadanya",
+          "imageUrl": "https://www.freebuddhistaudio.com/images/people/vadanya.jpg"
+        }
+      ]
     }
   ]
 }

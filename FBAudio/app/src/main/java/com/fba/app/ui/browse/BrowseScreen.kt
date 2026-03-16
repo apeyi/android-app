@@ -49,12 +49,15 @@ fun BrowseScreen(
     viewModel: BrowseViewModel = hiltViewModel(),
 ) {
     val hasInitialSelection = initialSangharakshitaByYear || initialSangharakshitaSeries || initialMitraStudy
-    // Apply initial navigation if requested
+    // Apply initial navigation only on first load, not when returning from detail screen
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        when {
-            initialSangharakshitaByYear -> viewModel.selectSangharakshitaByYear()
-            initialSangharakshitaSeries -> viewModel.selectSangharakshitaSeries()
-            initialMitraStudy -> viewModel.selectMitraStudy()
+        if (!viewModel.hasBeenInitialized) {
+            viewModel.hasBeenInitialized = true
+            when {
+                initialSangharakshitaByYear -> viewModel.selectSangharakshitaByYear()
+                initialSangharakshitaSeries -> viewModel.selectSangharakshitaSeries()
+                initialMitraStudy -> viewModel.selectMitraStudy()
+            }
         }
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()

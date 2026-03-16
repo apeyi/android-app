@@ -47,6 +47,9 @@ class BrowseViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BrowseUiState())
     val uiState: StateFlow<BrowseUiState> = _uiState
 
+    /** Tracks whether the initial selection (e.g. selectMitraStudy) has already been applied. */
+    var hasBeenInitialized = false
+
     // Pagination state — kept separate so loadMore can reference it
     private var paginationApiUrl: String = ""
     private var paginationQueryString: String = ""
@@ -460,15 +463,43 @@ class BrowseViewModel @Inject constructor(
 
         // Mitra nested back: pop stack and go back one level
         if (mitraCategoryStack.isNotEmpty()) {
-            mitraCategoryStack.removeLastOrNull()
+            mitraCategoryStack.removeLastOrNull() // remove current level
             val parent = mitraCategoryStack.lastOrNull()
             if (parent != null) {
-                // Re-select the parent to show its sub-categories
-                mitraCategoryStack.removeLast() // will be re-added by selectCategory
-                selectCategory(parent)
+                // Show the parent's sub-categories directly without going through selectCategory
+                // (which would re-add to stack)
+                when (parent.type) {
+                    CategoryType.MITRA_STUDY -> {
+                        _uiState.value = _uiState.value.copy(
+                            selectedCategory = parent,
+                            categories = MitraStudyData.yearCategories(),
+                            talks = emptyList(),
+                            totalTalkCount = 0,
+                            showingSubCategories = true,
+                            isLoadingTalks = false,
+                            isLoadingCategories = false,
+                        )
+                    }
+                    CategoryType.MITRA_YEAR -> {
+                        val year = parent.browseUrl.substringAfterLast("/").toIntOrNull() ?: 1
+                        _uiState.value = _uiState.value.copy(
+                            selectedCategory = parent,
+                            categories = MitraStudyData.moduleCategories(year),
+                            talks = emptyList(),
+                            totalTalkCount = 0,
+                            showingSubCategories = true,
+                            isLoadingTalks = false,
+                            isLoadingCategories = false,
+                        )
+                    }
+                    else -> {
+                        // Shouldn't happen, but handle gracefully
+                        mitraCategoryStack.clear()
+                    }
+                }
                 return
             }
-            // Stack empty — back to root categories
+            // Stack empty — fall through to reset
             mitraCategoryStack.clear()
         }
 

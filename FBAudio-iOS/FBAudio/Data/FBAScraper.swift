@@ -48,19 +48,6 @@ actor FBAScraper {
         return obj
     }
 
-    private func extractFbaJsonArray(_ html: String, key: String) -> [[String: Any]] {
-        let marker = "document.__FBA__.\(key)"
-        guard let range = html.range(of: marker) else { return [] }
-        let rest = html[range.upperBound...]
-        guard let eqRange = rest.range(of: "=") else { return [] }
-        let afterEq = rest[eqRange.upperBound...]
-        guard let bracketIdx = afterEq.firstIndex(of: "[") else { return [] }
-        guard let jsonStr = extractBalanced(String(afterEq[bracketIdx...]), open: "[", close: "]") else { return [] }
-        guard let data = jsonStr.data(using: .utf8),
-              let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [] }
-        return arr
-    }
-
     private func extractBalanced(_ data: String, open: Character, close: Character) -> String? {
         var depth = 0
         var inString = false
@@ -196,8 +183,6 @@ actor FBAScraper {
 
         categories.append(BrowseCategory(id: "Sangharakshita", name: "Sangharakshita",
                                           type: .sangharakshita, browseUrl: "sang://root"))
-        categories.append(BrowseCategory(id: "mitra_study", name: "Mitra Study",
-                                          type: .mitraStudy, browseUrl: "mitra://study"))
 
         let topics = ["Meditation", "Mindfulness", "Wisdom", "Ethics", "Sangha",
                        "The Buddha", "Dharma", "Devotion", "Death", "Relationships",

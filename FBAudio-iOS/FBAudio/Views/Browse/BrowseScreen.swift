@@ -7,7 +7,6 @@ struct BrowseScreen: View {
     enum BrowseMode {
         case sangharakshitaByYear
         case sangharakshitaSeries
-        case mitraStudy
         case speaker(String)
         case series(String)
     }
@@ -19,7 +18,6 @@ struct BrowseScreen: View {
     @State private var isLoadingCategories = false
     @State private var isLoadingTalks = false
     @State private var error: String?
-    @State private var mitraStack: [BrowseCategory] = []
 
     // Decade/year filtering
     @State private var selectedDecade: Int?
@@ -55,8 +53,6 @@ struct BrowseScreen: View {
 
     private var canGoBackInternally: Bool {
         switch initialMode {
-        case .mitraStudy:
-            return selectedCategory != nil || !mitraStack.isEmpty
         case .sangharakshitaSeries:
             return selectedCategory?.id.hasPrefix("sang_series_") == true
         default:
@@ -70,21 +66,6 @@ struct BrowseScreen: View {
             categories = SharedDataLoader.sangharakshitaSeriesAsCategories()
             selectedCategory = nil
             talks = []
-            return
-        }
-
-        // Mitra Study: pop the stack
-        if !mitraStack.isEmpty {
-            mitraStack.removeLast()
-            if let parent = mitraStack.last {
-                mitraStack.removeLast() // will be re-added by selectCategory
-                selectCategory(parent)
-            } else {
-                // Back to year list
-                categories = SharedDataLoader.yearCategories()
-                selectedCategory = nil
-                talks = []
-            }
             return
         }
 
@@ -206,9 +187,6 @@ struct BrowseScreen: View {
         case .sangharakshitaSeries:
             categories = SharedDataLoader.sangharakshitaSeriesAsCategories()
             return
-        case .mitraStudy:
-            categories = SharedDataLoader.yearCategories()
-            return
         case .speaker(let name):
             await loadSpeaker(name)
         case .series(let urlOrName):
@@ -227,22 +205,6 @@ struct BrowseScreen: View {
         case .sangharakshita:
             selectedCategory = category
             talks = SharedDataLoader.sangharakshitaTalks
-        case .mitraStudy:
-            mitraStack.append(category)
-            categories = SharedDataLoader.yearCategories()
-            selectedCategory = nil
-        case .mitraYear:
-            mitraStack.append(category)
-            let yearStr = category.browseUrl.replacingOccurrences(of: "mitra://year/", with: "")
-            if let year = Int(yearStr) {
-                categories = SharedDataLoader.moduleCategories(year: year)
-                selectedCategory = nil
-            }
-        case .mitraModule:
-            mitraStack.append(category)
-            let moduleId = category.browseUrl.replacingOccurrences(of: "mitra://module/", with: "")
-            talks = SharedDataLoader.moduleTalksAsSearchResults(moduleId)
-            selectedCategory = category
         default:
             selectedCategory = category
             Task { await loadBrowseUrl(category.browseUrl) }

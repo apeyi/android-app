@@ -384,16 +384,6 @@ class FBAScraper @Inject constructor(
             )
         )
 
-        // Mitra Study second
-        categories.add(
-            BrowseCategory(
-                id = "mitra_study",
-                name = "Mitra Study",
-                type = CategoryType.MITRA_STUDY,
-                browseUrl = "mitra://study",
-            )
-        )
-
         // Curated topic list with /browse?th= URLs
         val topics = listOf(
             "Meditation", "Mindfulness", "Wisdom", "Ethics", "Sangha",

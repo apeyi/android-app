@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.fba.app.domain.model.CategoryType
 import com.fba.app.ui.components.ErrorMessage
 import com.fba.app.ui.components.LoadingIndicator
 import com.fba.app.ui.components.TalkCard
@@ -45,11 +44,10 @@ fun BrowseScreen(
     onBack: () -> Unit,
     initialSangharakshitaByYear: Boolean = false,
     initialSangharakshitaSeries: Boolean = false,
-    initialMitraStudy: Boolean = false,
     alwaysPopOnBack: Boolean = false,
     viewModel: BrowseViewModel = hiltViewModel(),
 ) {
-    val hasInitialSelection = initialSangharakshitaByYear || initialSangharakshitaSeries || initialMitraStudy
+    val hasInitialSelection = initialSangharakshitaByYear || initialSangharakshitaSeries
     // Apply initial navigation only on first load, not when returning from detail screen
     androidx.compose.runtime.LaunchedEffect(Unit) {
         if (!viewModel.hasBeenInitialized) {
@@ -57,7 +55,6 @@ fun BrowseScreen(
             when {
                 initialSangharakshitaByYear -> viewModel.selectSangharakshitaByYear()
                 initialSangharakshitaSeries -> viewModel.selectSangharakshitaSeries()
-                initialMitraStudy -> viewModel.selectMitraStudy()
             }
         }
     }
@@ -67,11 +64,8 @@ fun BrowseScreen(
         if (alwaysPopOnBack) {
             onBack()
         } else if (hasInitialSelection) {
-            val canGoBack = when {
-                initialSangharakshitaSeries && state.selectedCategory?.id?.startsWith("sang_series_") == true -> true
-                initialMitraStudy && (state.showingSubCategories || state.selectedCategory?.type == CategoryType.MITRA_MODULE) -> true
-                else -> false
-            }
+            val canGoBack = initialSangharakshitaSeries &&
+                state.selectedCategory?.id?.startsWith("sang_series_") == true
             if (canGoBack) {
                 viewModel.clearSelection()
                 val newState = viewModel.uiState.value
@@ -131,12 +125,7 @@ fun BrowseScreen(
                             headlineContent = { Text(category.name) },
                             supportingContent = {
                                 Text(
-                                    text = when (category.type) {
-                                        CategoryType.MITRA_STUDY -> "Study Course"
-                                        CategoryType.MITRA_YEAR -> "Study Year"
-                                        CategoryType.MITRA_MODULE -> "Module"
-                                        else -> category.type.name.lowercase().replaceFirstChar { it.uppercase() }
-                                    },
+                                    text = category.type.name.lowercase().replaceFirstChar { it.uppercase() },
                                     style = MaterialTheme.typography.labelSmall,
                                 )
                             },

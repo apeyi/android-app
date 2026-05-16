@@ -41,6 +41,5 @@ data class BrowseCategory(
 
 enum class CategoryType {
     SPEAKER, THEME, SERIES, PLACE, YEAR, LANGUAGE,
-    MITRA_STUDY, MITRA_YEAR, MITRA_MODULE,
     SANGHARAKSHITA,
 }

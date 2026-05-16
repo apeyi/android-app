@@ -8,7 +8,6 @@ struct HomeScreen: View {
     let onTalkClick: (String) -> Void
     let onSangharakshitaByYearClick: () -> Void
     let onSangharakshitaSeriesClick: () -> Void
-    let onMitraStudyClick: () -> Void
     let onDonateClick: () -> Void
 
     var body: some View {
@@ -16,10 +15,6 @@ struct HomeScreen: View {
             LazyVStack(spacing: 8) {
                 // Sangharakshita section
                 sangharakshitaSection
-
-                // Mitra Study
-                sectionCard(title: "Mitra Study", subtitle: "Structured study courses",
-                           icon: "book", action: onMitraStudyClick)
 
                 // Donate
                 donateCard
@@ -87,28 +82,6 @@ struct HomeScreen: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal, 16)
         .padding(.top, 16)
-    }
-
-    // MARK: - Section Card
-
-    private func sectionCard(title: String, subtitle: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.title2)
-                VStack(alignment: .leading) {
-                    Text(title).font(.headline)
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(.secondary)
-            }
-            .padding(16)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 16)
     }
 
     // MARK: - Donate Card

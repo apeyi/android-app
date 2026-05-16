@@ -346,18 +346,6 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    /** Play a specific track URL (for multi-track talks). */
-    fun playTrack(audioUrl: String, title: String, speaker: String, imageUrl: String, catNum: String) {
-        viewModelScope.launch {
-            val talk = talkRepository.getTalkDetail(catNum)
-            setMediaAndPlay(Uri.parse(audioUrl), title, speaker, imageUrl)
-            _uiState.value = _uiState.value.copy(
-                currentTalk = talk,
-                isVisible = true,
-            )
-        }
-    }
-
     private fun setMediaAndPlay(uri: Uri, title: String, speaker: String, imageUrl: String) {
         val mediaItem = MediaItem.Builder()
             .setUri(uri)

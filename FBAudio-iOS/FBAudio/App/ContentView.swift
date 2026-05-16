@@ -14,7 +14,6 @@ struct ContentView: View {
                         onTalkClick: { navigateToDetail($0) },
                         onSangharakshitaByYearClick: { navigateToBrowse(.sangharakshitaByYear) },
                         onSangharakshitaSeriesClick: { navigateToBrowse(.sangharakshitaSeries) },
-                        onMitraStudyClick: { navigateToBrowse(.mitraStudy) },
                         onDonateClick: { openDonateUrl() }
                     )
                     .navigationTitle("Free Buddhist Audio")
@@ -105,7 +104,6 @@ struct ContentView: View {
     enum BrowseModeRoute: Hashable {
         case sangharakshitaByYear
         case sangharakshitaSeries
-        case mitraStudy
         case speaker(String)
         case series(String)
 
@@ -113,7 +111,6 @@ struct ContentView: View {
             switch self {
             case .sangharakshitaByYear: return .sangharakshitaByYear
             case .sangharakshitaSeries: return .sangharakshitaSeries
-            case .mitraStudy: return .mitraStudy
             case .speaker(let name): return .speaker(name)
             case .series(let url): return .series(url)
             }

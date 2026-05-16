@@ -2,9 +2,6 @@ import Foundation
 
 enum CategoryType: String {
     case sangharakshita
-    case mitraStudy
-    case mitraYear
-    case mitraModule
     case theme
     case year
     case series

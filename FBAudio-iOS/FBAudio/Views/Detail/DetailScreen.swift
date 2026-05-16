@@ -177,32 +177,18 @@ struct DetailScreen: View {
                 .padding(.top, 8)
 
             ForEach(0..<talk.tracks.count, id: \.self) { index in
-                let track = talk.tracks[index]
                 let isActive = player.currentTalk?.catNum == catNum
-                let isCurrent = isActive && player.currentTrackIndex == index
-
                 Divider()
-                Button(action: {
-                    if isActive {
-                        player.playTrackByIndex(index)
-                    } else {
-                        onPlay(catNum)
+                ChapterRow(
+                    index: index,
+                    track: talk.tracks[index],
+                    isCurrent: isActive && player.currentTrackIndex == index,
+                    onTap: {
+                        if !isActive { onPlay(catNum) }
                         player.playTrackByIndex(index)
                     }
-                }) {
-                    HStack {
-                        Text(track.title.isEmpty ? "Chapter \(index + 1)" : track.title)
-                            .fontWeight(isCurrent ? .bold : .regular)
-                            .foregroundStyle(isCurrent ? Color.saffronOrange : .primary)
-                        Spacer()
-                        if track.durationSeconds > 0 {
-                            Text(formatDuration(track.durationSeconds))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
+                )
+                .padding(.vertical, 8)
             }
         }
     }

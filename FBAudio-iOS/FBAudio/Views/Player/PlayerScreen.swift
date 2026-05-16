@@ -211,21 +211,15 @@ struct PlayerScreen: View {
     private func chapterSheet(tracks: [Track]) -> some View {
         NavigationStack {
             List(Array(tracks.enumerated()), id: \.offset) { index, track in
-                Button(action: {
-                    player.playTrackByIndex(index)
-                    showChapterSheet = false
-                }) {
-                    HStack {
-                        Text(track.title.isEmpty ? "Chapter \(index + 1)" : track.title)
-                            .fontWeight(index == player.currentTrackIndex ? .bold : .regular)
-                            .foregroundStyle(index == player.currentTrackIndex ? Color.saffronOrange : .primary)
-                        Spacer()
-                        if track.durationSeconds > 0 {
-                            Text(formatDuration(track.durationSeconds))
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
+                ChapterRow(
+                    index: index,
+                    track: track,
+                    isCurrent: index == player.currentTrackIndex,
+                    onTap: {
+                        player.playTrackByIndex(index)
+                        showChapterSheet = false
                     }
-                }
+                )
                 .listRowBackground(index == player.currentTrackIndex ? Color.saffronOrange.opacity(0.1) : nil)
             }
             .navigationTitle("Chapters")

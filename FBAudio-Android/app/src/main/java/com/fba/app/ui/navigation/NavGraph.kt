@@ -132,13 +132,5 @@ fun NavGraph(
                 initialSangharakshitaSeries = true,
             )
         }
-        // Mitra Study
-        composable(Routes.MITRA_STUDY) {
-            BrowseScreen(
-                onTalkClick = { navController.navigate(Routes.detail(it)) },
-                onBack = { navController.popBackStack() },
-                initialMitraStudy = true,
-            )
-        }
     }
 }

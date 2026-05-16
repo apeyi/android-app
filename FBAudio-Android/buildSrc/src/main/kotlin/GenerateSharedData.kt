@@ -20,7 +20,6 @@ open class GenerateSharedData : DefaultTask() {
         outPkg.mkdirs()
 
         generateSangharakshita(gson, outPkg)
-        generateMitraStudy(gson, outPkg)
         copyImages()
     }
 
@@ -97,100 +96,10 @@ object SangharakshitaData {
 """.trimStart())
     }
 
-    private fun generateMitraStudy(gson: Gson, outDir: File) {
-        val json = File(sharedDataDir, "mitra_study.json").readText()
-        val data = gson.fromJson<MitraData>(json, MitraData::class.java)
-
-        val modulesLiteral = data.modules.joinToString(",\n        ") { m ->
-            val seriesCodes = if (m.seriesCodes.isNotEmpty()) {
-                "seriesCodes = listOf(${m.seriesCodes.joinToString(", ") { "\"${esc(it)}\"" }}),\n            "
-            } else ""
-            val talks = m.talks.joinToString(",\n                ") { t ->
-                "MitraTalk(\"${esc(t.catNum)}\", \"${esc(t.title)}\", \"${esc(t.speaker)}\", \"${esc(t.imageUrl)}\")"
-            }
-            """MitraModule(
-            id = "${esc(m.id)}", name = "${esc(m.name)}", year = ${m.year},
-            ${seriesCodes}talks = listOf(
-                $talks
-            ),
-        )"""
-        }
-
-        File(outDir, "MitraStudyData.kt").writeText("""
-package com.fba.app.domain.model
-
-data class MitraModule(
-    val id: String,
-    val name: String,
-    val year: Int,
-    val talks: List<MitraTalk>,
-    val seriesCodes: List<String> = emptyList(),
-)
-
-data class MitraTalk(
-    val catNum: String,
-    val title: String,
-    val speaker: String,
-    val imageUrl: String = "",
-)
-
-object MitraStudyData {
-
-    val modules: List<MitraModule> = listOf(
-        $modulesLiteral
-    )
-
-    /** Get modules grouped by year. */
-    fun modulesByYear(): Map<Int, List<MitraModule>> = modules.groupBy { it.year }
-
-    /** Convert module talks to SearchResult list for display in browse screen. */
-    fun moduleTalksAsSearchResults(moduleId: String): List<SearchResult> {
-        val module = modules.find { it.id == moduleId } ?: return emptyList()
-        return module.talks.map { talk ->
-            SearchResult(
-                catNum = talk.catNum,
-                title = talk.title,
-                speaker = talk.speaker,
-                imageUrl = talk.imageUrl,
-                path = "https://www.freebuddhistaudio.com/audio/details?num=${'$'}{talk.catNum}",
-            )
-        }
-    }
-
-    /** Get year sub-categories as BrowseCategory list. */
-    fun yearCategories(): List<BrowseCategory> {
-        return (1..4).map { year ->
-            BrowseCategory(
-                id = "mitra_year_${'$'}year",
-                name = "Year ${'$'}year",
-                type = CategoryType.MITRA_YEAR,
-                browseUrl = "mitra://year/${'$'}year",
-            )
-        }
-    }
-
-    /** Get module sub-categories for a given year. */
-    fun moduleCategories(year: Int): List<BrowseCategory> {
-        return modules.filter { it.year == year }.map { module ->
-            BrowseCategory(
-                id = module.id,
-                name = module.name,
-                type = CategoryType.MITRA_MODULE,
-                browseUrl = "mitra://module/${'$'}{module.id}",
-            )
-        }
-    }
-}
-""".trimStart())
-    }
-
     private fun esc(s: String) = s.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\${'$'}")
 
     // JSON model classes
     private data class SangData(val speaker: String, val talks: List<SangTalk>, val series: List<SangSeries>)
     private data class SangTalk(val catNum: String, val title: String, val year: Int, val imageUrl: String)
     private data class SangSeries(val id: String, val title: String)
-    private data class MitraData(val modules: List<MitraModuleJson>)
-    private data class MitraModuleJson(val id: String, val name: String, val year: Int, val seriesCodes: List<String>, val talks: List<MitraTalkJson>)
-    private data class MitraTalkJson(val catNum: String, val title: String, val speaker: String, val imageUrl: String)
 }

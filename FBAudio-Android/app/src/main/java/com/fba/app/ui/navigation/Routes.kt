@@ -11,7 +11,6 @@ object Routes {
     const val TRANSCRIPT = "transcript/{transcriptUrl}?catNum={catNum}"
     const val SANGHARAKSHITA_BY_YEAR = "sangharakshita_by_year"
     const val SANGHARAKSHITA_SERIES = "sangharakshita_series"
-    const val MITRA_STUDY = "mitra_study"
 
     fun detail(catNum: String) = "detail/$catNum"
     fun browseForSpeaker(name: String) = "browse_speaker/${java.net.URLEncoder.encode(name, "UTF-8")}"

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.fba.app.data.repository.TalkRepository
 import com.fba.app.domain.model.BrowseCategory
 import com.fba.app.domain.model.CategoryType
-import com.fba.app.domain.model.MitraStudyData
 import com.fba.app.domain.model.SangharakshitaData
 import com.fba.app.domain.model.SearchResult
 import com.fba.app.ui.friendlyError
@@ -17,8 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class SortOrder { DEFAULT, YEAR_DESC, YEAR_ASC, TITLE_AZ }
-
 data class BrowseUiState(
     val categories: List<BrowseCategory> = emptyList(),
     val selectedCategory: BrowseCategory? = null,
@@ -28,7 +25,6 @@ data class BrowseUiState(
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = false,
     val totalTalkCount: Int = 0,
-    val sortOrder: SortOrder = SortOrder.DEFAULT,
     val error: String? = null,
     val allItemsLoaded: Boolean = false,
     val availableDecades: List<Int> = emptyList(),
@@ -47,7 +43,7 @@ class BrowseViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BrowseUiState())
     val uiState: StateFlow<BrowseUiState> = _uiState
 
-    /** Tracks whether the initial selection (e.g. selectMitraStudy) has already been applied. */
+    /** Tracks whether the initial selection (e.g. selectSangharakshitaByYear) has already been applied. */
     var hasBeenInitialized = false
 
     // Pagination state — kept separate so loadMore can reference it
@@ -56,8 +52,6 @@ class BrowseViewModel @Inject constructor(
     private var autoLoadJob: Job? = null
     // Full unfiltered list when all items are loaded (for year/decade filtering)
     private var allItems: List<SearchResult> = emptyList()
-    // Mitra Study navigation stack for nested back navigation
-    private val mitraCategoryStack = mutableListOf<BrowseCategory>()
     // Remember the root categories so we can restore them
     private var rootCategories: List<BrowseCategory> = emptyList()
 
@@ -154,63 +148,10 @@ class BrowseViewModel @Inject constructor(
                 selectedDecade = null,
                 availableYears = emptyList(),
                 selectedYear = null,
-                sortOrder = SortOrder.DEFAULT,
             )
             return
         }
 
-        // Mitra Study: show years as sub-categories
-        if (category.type == CategoryType.MITRA_STUDY) {
-            mitraCategoryStack.add(category)
-            _uiState.value = _uiState.value.copy(
-                selectedCategory = category,
-                categories = MitraStudyData.yearCategories(),
-                isLoadingTalks = false,
-                isLoadingCategories = false,
-                talks = emptyList(),
-                totalTalkCount = 0,
-                showingSubCategories = true,
-            )
-            return
-        }
-
-        // Mitra Year: show modules as sub-categories
-        if (category.type == CategoryType.MITRA_YEAR) {
-            mitraCategoryStack.add(category)
-            val year = category.browseUrl.substringAfterLast("/").toIntOrNull() ?: 1
-            _uiState.value = _uiState.value.copy(
-                selectedCategory = category,
-                categories = MitraStudyData.moduleCategories(year),
-                isLoadingTalks = false,
-                isLoadingCategories = false,
-                talks = emptyList(),
-                totalTalkCount = 0,
-                showingSubCategories = true,
-            )
-            return
-        }
-
-        // Mitra Module: show hardcoded talks
-        if (category.type == CategoryType.MITRA_MODULE) {
-            mitraCategoryStack.add(category)
-            val moduleTalks = MitraStudyData.moduleTalksAsSearchResults(category.id)
-            allItems = moduleTalks
-            _uiState.value = _uiState.value.copy(
-                selectedCategory = category,
-                talks = moduleTalks,
-                totalTalkCount = moduleTalks.size,
-                hasMore = false,
-                isLoadingTalks = false,
-                allItemsLoaded = true,
-                showingSubCategories = false,
-                sortOrder = SortOrder.DEFAULT,
-                availableDecades = emptyList(),
-                selectedDecade = null,
-                availableYears = emptyList(),
-                selectedYear = null,
-            )
-            return
-        }
 
         // Check in-memory cache first (before setting loading state to avoid flash)
         val cached = repository.getCachedBrowse(category.browseUrl)
@@ -229,7 +170,6 @@ class BrowseViewModel @Inject constructor(
                 selectedDecade = null,
                 availableYears = emptyList(),
                 selectedYear = null,
-                sortOrder = SortOrder.DEFAULT,
             )
             return
         }
@@ -240,7 +180,6 @@ class BrowseViewModel @Inject constructor(
             talks = emptyList(),
             hasMore = false,
             totalTalkCount = 0,
-            sortOrder = SortOrder.DEFAULT,
             allItemsLoaded = false,
             showingSubCategories = false,
             availableDecades = emptyList(),
@@ -304,7 +243,7 @@ class BrowseViewModel @Inject constructor(
                 // Save cache incrementally so it persists even if user navigates away
                 repository.setCachedBrowse(cacheKey, allItems)
                 _uiState.value = _uiState.value.copy(
-                    talks = applyFilters(allItems, _uiState.value.sortOrder, _uiState.value.selectedDecade, _uiState.value.selectedYear),
+                    talks = applyFilters(allItems, _uiState.value.selectedDecade, _uiState.value.selectedYear),
                     hasMore = loaded.size < total,
                     isLoadingMore = loaded.size < total,
                     availableDecades = partialDecades,
@@ -338,7 +277,7 @@ class BrowseViewModel @Inject constructor(
                 )
                 val allTalks = state.talks + newItems
                 _uiState.value = _uiState.value.copy(
-                    talks = applySortOrder(allTalks, state.sortOrder),
+                    talks = allTalks,
                     isLoadingMore = false,
                     hasMore = allTalks.size < state.totalTalkCount,
                 )
@@ -348,19 +287,13 @@ class BrowseViewModel @Inject constructor(
         }
     }
 
-    fun setSortOrder(order: SortOrder) {
-        val state = _uiState.value
-        val filtered = applyFilters(allItems.ifEmpty { state.talks }, order, state.selectedDecade, state.selectedYear)
-        _uiState.value = state.copy(talks = filtered, sortOrder = order)
-    }
-
     fun selectDecade(decade: Int?) {
         val state = _uiState.value
         val years = if (decade != null) {
             allItems.mapNotNull { if (it.year in decade until decade + 10) it.year else null }
                 .distinct().sorted()
         } else emptyList()
-        val filtered = applyFilters(allItems, state.sortOrder, decade, null)
+        val filtered = applyFilters(allItems, decade, null)
         _uiState.value = state.copy(
             selectedDecade = decade,
             selectedYear = null,
@@ -371,32 +304,18 @@ class BrowseViewModel @Inject constructor(
 
     fun selectYear(year: Int?) {
         val state = _uiState.value
-        val filtered = applyFilters(allItems, state.sortOrder, state.selectedDecade, year)
+        val filtered = applyFilters(allItems, state.selectedDecade, year)
         _uiState.value = state.copy(selectedYear = year, talks = filtered)
     }
 
     private fun applyFilters(
         items: List<SearchResult>,
-        order: SortOrder,
         decade: Int?,
         year: Int?,
     ): List<SearchResult> {
-        var result = items
-        if (year != null) {
-            result = result.filter { it.year == year }
-        } else if (decade != null) {
-            result = result.filter { it.year in decade until decade + 10 }
-        }
-        return applySortOrder(result, order)
-    }
-
-    private fun applySortOrder(talks: List<SearchResult>, order: SortOrder): List<SearchResult> {
-        return when (order) {
-            SortOrder.DEFAULT -> talks
-            SortOrder.YEAR_DESC -> talks.sortedByDescending { it.year }
-            SortOrder.YEAR_ASC -> talks.sortedBy { if (it.year == 0) Int.MAX_VALUE else it.year }
-            SortOrder.TITLE_AZ -> talks.sortedBy { it.title.lowercase() }
-        }
+        if (year != null) return items.filter { it.year == year }
+        if (decade != null) return items.filter { it.year in decade until decade + 10 }
+        return items
     }
 
     private fun computeDecades(items: List<SearchResult>): List<Int> {
@@ -437,19 +356,6 @@ class BrowseViewModel @Inject constructor(
         )
     }
 
-    /** Pre-select Mitra Study. */
-    fun selectMitraStudy() {
-        if (_uiState.value.selectedCategory?.type == CategoryType.MITRA_STUDY) return
-        selectCategory(
-            BrowseCategory(
-                id = "mitra_study",
-                name = "Mitra Study",
-                type = CategoryType.MITRA_STUDY,
-                browseUrl = "mitra://study",
-            )
-        )
-    }
-
     fun clearSelection() {
         // Don't cancel autoLoadJob — let background loading continue so cache gets populated
         allItems = emptyList()
@@ -461,55 +367,12 @@ class BrowseViewModel @Inject constructor(
             return
         }
 
-        // Mitra nested back: pop stack and go back one level
-        if (mitraCategoryStack.isNotEmpty()) {
-            mitraCategoryStack.removeLastOrNull() // remove current level
-            val parent = mitraCategoryStack.lastOrNull()
-            if (parent != null) {
-                // Show the parent's sub-categories directly without going through selectCategory
-                // (which would re-add to stack)
-                when (parent.type) {
-                    CategoryType.MITRA_STUDY -> {
-                        _uiState.value = _uiState.value.copy(
-                            selectedCategory = parent,
-                            categories = MitraStudyData.yearCategories(),
-                            talks = emptyList(),
-                            totalTalkCount = 0,
-                            showingSubCategories = true,
-                            isLoadingTalks = false,
-                            isLoadingCategories = false,
-                        )
-                    }
-                    CategoryType.MITRA_YEAR -> {
-                        val year = parent.browseUrl.substringAfterLast("/").toIntOrNull() ?: 1
-                        _uiState.value = _uiState.value.copy(
-                            selectedCategory = parent,
-                            categories = MitraStudyData.moduleCategories(year),
-                            talks = emptyList(),
-                            totalTalkCount = 0,
-                            showingSubCategories = true,
-                            isLoadingTalks = false,
-                            isLoadingCategories = false,
-                        )
-                    }
-                    else -> {
-                        // Shouldn't happen, but handle gracefully
-                        mitraCategoryStack.clear()
-                    }
-                }
-                return
-            }
-            // Stack empty — fall through to reset
-            mitraCategoryStack.clear()
-        }
-
         _uiState.value = _uiState.value.copy(
             selectedCategory = null,
             categories = rootCategories,
             talks = emptyList(),
             hasMore = false,
             totalTalkCount = 0,
-            sortOrder = SortOrder.DEFAULT,
             allItemsLoaded = false,
             availableDecades = emptyList(),
             selectedDecade = null,

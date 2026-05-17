@@ -3,12 +3,12 @@ name: Android Build & Test
 on:
   push:
     paths:
-      - 'FBAudio/**'
+      - 'FBAudio-Android/**'
       - 'fbaudio-shared/**'
       - '.github/workflows/android.yml'
   pull_request:
     paths:
-      - 'FBAudio/**'
+      - 'FBAudio-Android/**'
       - 'fbaudio-shared/**'
 
 jobs:
@@ -27,9 +27,9 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build
-        working-directory: FBAudio
+        working-directory: FBAudio-Android
         run: ./gradlew assembleDebug
 
       - name: Test
-        working-directory: FBAudio
+        working-directory: FBAudio-Android
         run: ./gradlew testDebugUnitTest

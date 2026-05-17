@@ -257,17 +257,7 @@ class FBAScraper @Inject constructor(
             val catNum = obj.getStr("cat_num") ?: obj.getStr("catNum")
                 ?: path.substringAfter("num=", "").substringBefore("&")
             if (catNum.isBlank()) continue
-            val year = obj.getStr("year")?.toIntOrNull() ?: 0
-            results.add(
-                SearchResult(
-                    catNum = catNum,
-                    title = unescape(obj.getStr("title") ?: ""),
-                    speaker = unescape(obj.getStr("speaker") ?: ""),
-                    imageUrl = resolveUrl(obj.getStr("image_url") ?: obj.getStr("image") ?: ""),
-                    path = resolveUrl(path),
-                    year = year,
-                )
-            )
+            results.add(obj.toSearchResult(catNum, path))
         }
         val totalItems = collectionJson.getInt("total_items") ?: results.size
         val apiPath = collectionJson.getStr("url") ?: ""
@@ -297,14 +287,7 @@ class FBAScraper @Inject constructor(
                         val catNum = obj.getStr("cat_num") ?: obj.getStr("catNum")
                             ?: path.substringAfter("num=", "").substringBefore("&")
                         if (catNum.isBlank()) return@async null
-                        SearchResult(
-                            catNum = catNum,
-                            title = unescape(obj.getStr("title") ?: ""),
-                            speaker = unescape(obj.getStr("speaker") ?: ""),
-                            imageUrl = resolveUrl(obj.getStr("image_url") ?: obj.getStr("image") ?: ""),
-                            path = resolveUrl(path),
-                            year = obj.getStr("year")?.toIntOrNull() ?: 0,
-                        )
+                        obj.toSearchResult(catNum, path)
                     } catch (_: Exception) { null }
                 }
             }
@@ -353,16 +336,7 @@ class FBAScraper @Inject constructor(
             val catNum = obj.getStr("cat_num") ?: obj.getStr("catNum") ?: continue
             if (catNum.isBlank() || !seen.add(catNum)) continue
             val link = obj.getStr("link") ?: "/audio/details?num=$catNum"
-            results.add(
-                SearchResult(
-                    catNum = catNum,
-                    title = unescape(obj.getStr("title") ?: ""),
-                    speaker = unescape(obj.getStr("speaker") ?: ""),
-                    imageUrl = resolveUrl(obj.getStr("image_url") ?: obj.getStr("image") ?: ""),
-                    path = resolveUrl(link),
-                    year = obj.getStr("year")?.toIntOrNull() ?: 0,
-                )
-            )
+            results.add(obj.toSearchResult(catNum, link))
         }
         return results
     }
@@ -450,16 +424,7 @@ class FBAScraper @Inject constructor(
             if (catNum.isBlank()) continue
             val path = obj.getStr("link") ?: obj.getStr("url") ?: obj.getStr("href")
                 ?: "/audio/details?num=$catNum"
-            results.add(
-                SearchResult(
-                    catNum = catNum,
-                    title = unescape(obj.getStr("title") ?: ""),
-                    speaker = unescape(obj.getStr("speaker") ?: obj.getStr("author") ?: ""),
-                    imageUrl = resolveUrl(obj.getStr("image_url") ?: obj.getStr("image") ?: ""),
-                    path = resolveUrl(path),
-                    year = obj.getStr("year")?.toIntOrNull() ?: 0,
-                )
-            )
+            results.add(obj.toSearchResult(catNum, path))
         }
         return BrowsePage(results, results.size, "", "", title = seriesTitle)
     }
@@ -467,6 +432,17 @@ class FBAScraper @Inject constructor(
     private fun JsonObject.getStr(key: String): String? {
         return if (has(key) && !get(key).isJsonNull && get(key).isJsonPrimitive) get(key).asString else null
     }
+
+    /** Build a SearchResult from a JSON item, given an already-resolved catNum and link path. */
+    private fun JsonObject.toSearchResult(catNum: String, path: String): SearchResult =
+        SearchResult(
+            catNum = catNum,
+            title = unescape(getStr("title") ?: ""),
+            speaker = unescape(getStr("speaker") ?: getStr("author") ?: ""),
+            imageUrl = resolveUrl(getStr("image_url") ?: getStr("image") ?: ""),
+            path = resolveUrl(path),
+            year = getStr("year")?.toIntOrNull() ?: 0,
+        )
 
     private fun JsonObject.getInt(key: String): Int? {
         return if (has(key) && !get(key).isJsonNull) {
